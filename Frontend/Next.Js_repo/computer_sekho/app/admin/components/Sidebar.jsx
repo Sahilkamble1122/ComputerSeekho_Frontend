@@ -1,9 +1,8 @@
-import { Home, FileText, Image, Users, ClipboardCheck } from 'lucide-react';
+import { FileText, Image, Users, ClipboardCheck } from 'lucide-react';
 
 const navItems = [
-  { name: 'Dashboard', icon: <Home />, path: '#' },
-  { name: 'Enquiries', icon: <FileText />, path: '#' },
   { name: 'Follow Ups', icon: <ClipboardCheck />, path: '#' },
+  { name: 'Enquiries', icon: <FileText />, path: '#' },
   { name: 'Gallery', icon: <Image />, path: '#' },
   { name: 'Placements', icon: <Users />, path: '#' },
 ];
