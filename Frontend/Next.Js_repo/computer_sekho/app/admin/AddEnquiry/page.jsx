@@ -49,35 +49,6 @@ export default function EnquiryForm() {
       return;
     }
     setErrors({});
-
-//     try {
-//       const res = await fetch('/api/enquiry', {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify(formData),
-//       });
-//       const data = await res.json();
-//       if (res.ok) {
-//         setSuccess('Enquiry saved successfully!');
-//         setFormData({
-//           enquirer_name: '',
-//           enquirer_address: '',
-//           enquirer_mobile: '',
-//           enquirer_alternate_mob: '',
-//           enquirer_email_id: '',
-//           enquirer_query: '',
-//           closure_reason_id: '',
-//           closure_reason: '',
-//           course_id: '',
-//           student_name: '',
-//           follow_up_date: '',
-//         });
-//       } else {
-//         alert(data.message);
-//       }
-//     } catch (err) {
-//       console.error(err);
-//     }
    };
 
   return (

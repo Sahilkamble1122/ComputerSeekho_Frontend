@@ -1,27 +1,27 @@
-import React from 'react'
-import Headerbar from './components/Headerbar'
-import Sidebar from './components/Sidebar'
-import { Button } from "@/components/ui/button"
-import  Link  from 'next/link'
+'use client';
 
-const page = () => {
+import React, { useEffect, useState } from 'react';
+import Headerbar from './components/Headerbar';
+import Sidebar from './components/Sidebar';
+import FollowUpTable from './Followuptable/page';
+import { Button } from "@/components/ui/button";
+import Link from 'next/link';
+
+const Page = () => {
+
+  //fetching data comes here
+
   return (
-    <div className="flex">
-      {/* Sidebar */}
-      <Sidebar />
+    <>
+      {/* <h1 className="text-2xl font-semibold mb-4">Welcome, {admin.name} 👋</h1> // uncomment after db is created */}
 
-      {/* Main Content */}
-      <div className="flex-1">
-        <Headerbar />
-        <main className="p-6">
-          <h1 className="text-2xl font-semibold">Welcome to Admin Dashboard</h1>
-            <Button asChild variant="outline">
-              <Link href="/admin/enquiry">Add Enquiry</Link>
-            </Button>
-        </main>
-      </div>
-    </div>
-  )
-}
+      <Button asChild variant="outline">
+        <Link href="/admin/AddEnquiry">Add Enquiry</Link>
+      </Button>
 
-export default page
+      <FollowUpTable/>
+    </>
+  );
+};
+
+export default Page;
