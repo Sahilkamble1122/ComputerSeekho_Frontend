@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AddAlbum() {
   const [albumName, setAlbumName] = useState("");
@@ -16,13 +16,17 @@ export default function AddAlbum() {
   const [isActive, setIsActive] = useState(true);
   const [albums, setAlbums] = useState([]);
 
+  const [selectedAlbumId, setSelectedAlbumId] = useState("");
+  const [imageFiles, setImageFiles] = useState([]);
+  const [coverImageIndex, setCoverImageIndex] = useState(null); // Track index of cover image
+
   useEffect(() => {
     fetchAlbums();
   }, []);
 
   const fetchAlbums = async () => {
     try {
-      const res = await fetch("/api/albums"); // TODO: Replace with actual API
+      const res = await fetch("/api/albums"); // ✅ Fetch all albums from API
       const data = await res.json();
       setAlbums(data);
     } catch (err) {
@@ -36,21 +40,22 @@ export default function AddAlbum() {
 
     try {
       const res = await fetch(`/api/albums/${id}`, {
-        method: "DELETE",
+        method: "DELETE", // ✅ Delete album by ID
       });
 
       if (!res.ok) throw new Error("Delete failed");
       toast.success("Album deleted");
-      fetchAlbums();
+      fetchAlbums(); // ✅ Refresh album list after deletion
     } catch (err) {
       console.error(err);
       toast.error("Failed to delete album");
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleCreateAlbum = async (e) => {
     e.preventDefault();
 
+    // ✅ Form validation for empty required fields
     if (!albumName || !startDate || !endDate) {
       return toast.error("Please fill in all required fields");
     }
@@ -61,7 +66,7 @@ export default function AddAlbum() {
 
     try {
       const res = await fetch("/api/albums", {
-        method: "POST",
+        method: "POST", // ✅ Create new album
         headers: {
           "Content-Type": "application/json",
         },
@@ -81,35 +86,62 @@ export default function AddAlbum() {
       setStartDate("");
       setEndDate("");
       setIsActive(true);
-      fetchAlbums();
+      fetchAlbums(); // ✅ Refresh albums after creation
     } catch (err) {
       console.error(err);
       toast.error("Album creation failed");
     }
   };
 
+  const handleAddImages = async (e) => {
+    e.preventDefault();
+    if (!selectedAlbumId || imageFiles.length === 0) {
+      return toast.error("Please select album and upload images");
+    }
+
+    const formData = new FormData();
+    formData.append("album_id", selectedAlbumId);
+
+    imageFiles.forEach((file, index) => {
+      formData.append("images", file);
+      // ✅ Set cover flag for the selected image index only
+      formData.append(`is_cover_${index}`, index === coverImageIndex);
+    });
+
+    try {
+      const res = await fetch("/api/images", {
+        method: "POST", // ✅ Upload multiple images
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Failed to upload images");
+      toast.success("Images uploaded successfully");
+      setImageFiles([]);
+      setCoverImageIndex(null);
+    } catch (err) {
+      console.error(err);
+      toast.error("Image upload failed");
+    }
+  };
+
   return (
-    <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow rounded">
-      <Tabs defaultValue="gallery">
-        <TabsList className="mb-6">
-          <TabsTrigger value="gallery">Albums</TabsTrigger>
-          <TabsTrigger value="add">Add Album</TabsTrigger>
+    <div className="max-w-4xl mx-auto mt-10 p-6 bg-white shadow rounded space-y-6">
+      <h2 className="text-xl font-bold">Gallery Management</h2>
+
+      <Tabs defaultValue="view">
+        <TabsList>
+          <TabsTrigger value="view">Existing Albums</TabsTrigger>
+          <TabsTrigger value="album">Add Album</TabsTrigger>
+          <TabsTrigger value="images">Add Images</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="gallery">
+        <TabsContent value="view">
           <h3 className="text-lg font-semibold mb-4">Existing Albums</h3>
           <ul className="space-y-2">
             {albums.map((album) => (
-              <li
-                key={album.album_id}
-                className="flex items-center justify-between px-4 py-2 border rounded hover:bg-gray-50"
-              >
+              <li key={album.album_id} className="flex items-center justify-between px-4 py-2 border rounded hover:bg-gray-50">
                 <span>{album.album_name}</span>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDeleteAlbum(album.album_id)}
-                >
+                <Button variant="destructive" size="sm" onClick={() => handleDeleteAlbum(album.album_id)}>
                   Delete
                 </Button>
               </li>
@@ -117,59 +149,76 @@ export default function AddAlbum() {
           </ul>
         </TabsContent>
 
-        <TabsContent value="add">
-          <h2 className="text-xl font-bold mb-4">Add New Album</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <TabsContent value="album">
+          <form onSubmit={handleCreateAlbum} className="space-y-4">
             <div>
               <Label>Album Name</Label>
-              <Input
-                value={albumName}
-                onChange={(e) => setAlbumName(e.target.value)}
-                required
-              />
+              <Input value={albumName} onChange={(e) => setAlbumName(e.target.value)} required />
             </div>
-
             <div>
               <Label>Description</Label>
-              <Input
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
+              <Input value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
-
             <div>
               <Label>Start Date</Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-              />
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
             </div>
-
             <div>
               <Label>End Date</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                required
-              />
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
             </div>
-
             <div className="flex items-center gap-2">
-              <Checkbox
-                checked={isActive}
-                onCheckedChange={() => setIsActive(!isActive)}
-              />
+              <Checkbox checked={isActive} onCheckedChange={() => setIsActive(!isActive)} />
               <Label>Active</Label>
             </div>
-
             <Button type="submit">Create Album</Button>
+          </form>
+        </TabsContent>
+
+        <TabsContent value="images">
+          <form onSubmit={handleAddImages} className="space-y-4">
+            <Label>Select Album</Label>
+            <select
+              value={selectedAlbumId}
+              onChange={(e) => setSelectedAlbumId(e.target.value)}
+              className="w-full p-2 border rounded"
+              required
+            >
+              <option value="">Select</option>
+              {albums.map((a) => (
+                <option key={a.album_id} value={a.album_id}>
+                  {a.album_name}
+                </option>
+              ))}
+            </select>
+
+            <Label>Upload Images</Label>
+            <Input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(e) => setImageFiles(Array.from(e.target.files))}
+            />
+
+            {/* ✅ Mark one image as cover */}
+            {imageFiles.length > 0 && (
+              <div className="space-y-2">
+                {imageFiles.map((file, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={coverImageIndex === index}
+                      onCheckedChange={() => setCoverImageIndex(index)}
+                    />
+                    <Label>{file.name}</Label>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <Button type="submit">Upload Images</Button>
           </form>
         </TabsContent>
       </Tabs>
     </div>
   );
 }
-
