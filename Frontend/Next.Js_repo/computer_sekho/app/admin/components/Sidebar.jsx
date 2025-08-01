@@ -7,7 +7,7 @@ import Link from 'next/link';
 const navItems = [
   { name: 'Follow Ups', icon: ClipboardCheck, path: '/admin' },
   { name: 'Enquiries', icon: FileText, path: '/admin/enquiry' },
-  { name: 'Gallery', icon: Image, path: '/admin/gallery' },
+  { name: 'Gallery', icon: Image, path: '/admin/gallery/album' },
   { name: 'Placements', icon: Users, path: '/admin/placements' },
 ];
 
