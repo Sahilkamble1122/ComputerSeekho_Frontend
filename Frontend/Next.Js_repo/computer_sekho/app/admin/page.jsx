@@ -11,14 +11,13 @@ const Page = () => {
 
   //fetching data comes here
 
+
+  // create a state for the admin which has logged in and pass it to follow up table 
+  // also side bar(can use context)
+
   return (
     <>
       {/* <h1 className="text-2xl font-semibold mb-4">Welcome, {admin.name} 👋</h1> // uncomment after db is created */}
-
-      <Button asChild variant="outline">
-        <Link href="/admin/AddEnquiry">Add Enquiry</Link>
-      </Button>
-
       <FollowUpTable/>
     </>
   );
