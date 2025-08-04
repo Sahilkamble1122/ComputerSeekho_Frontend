@@ -37,7 +37,7 @@ export default function LoginPage() {
       localStorage.setItem('token', data.token);
 
       // Redirect to dashboard or another page
-      router.push('/dashboard');
+      router.push('/admin');
     } catch (err) {
       setError(err.message);
     }
