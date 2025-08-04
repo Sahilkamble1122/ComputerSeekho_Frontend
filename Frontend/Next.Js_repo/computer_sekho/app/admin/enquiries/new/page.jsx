@@ -12,19 +12,6 @@ import { useForm } from "react-hook-form";
 export default function EnquiryForm() {
   const [currentAdmin, setCurrentAdmin] = useState("");
 
-  // Simulate fetching current logged-in admin name
-  useEffect(() => {
-    // Example: Fetch from session or auth API
-    const fetchAdmin = async () => {
-      const res = await fetch("/api/auth/me"); // Comment: fetch current user info
-      if (res.ok) {
-        const user = await res.json();
-        setCurrentAdmin(user.name); // Set admin name to assign as staff
-      }
-    };
-    fetchAdmin();
-  }, []);
-
   const {
     register,
     handleSubmit,
@@ -33,7 +20,40 @@ export default function EnquiryForm() {
     setValue
   } = useForm();
 
-  // Assign default staff name once fetched
+  // Auto-login and fetch admin info
+  useEffect(() => {
+    const loginAndFetchAdmin = async () => {
+      try {
+        // Replace with your actual credentials (for demo/dev only)
+        const loginResponse = await fetch('http://localhost:8080/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username: 'admin', password: 'admin123' }),
+        });
+
+        if (!loginResponse.ok) {
+          toast.error("Login failed.");
+          return;
+        }
+
+        const meResponse = await fetch("/api/auth/me");
+        if (meResponse.ok) {
+          const user = await meResponse.json();
+          setCurrentAdmin(user.name);
+        } else {
+          toast.error("Failed to fetch user.");
+        }
+      } catch (error) {
+        toast.error("Auth error.");
+      }
+    };
+
+    loginAndFetchAdmin();
+  }, []);
+
+  // Set staff field once admin is fetched
   useEffect(() => {
     if (currentAdmin) {
       setValue("staff", currentAdmin);
@@ -45,22 +65,22 @@ export default function EnquiryForm() {
       const res = await fetch("/api/enquiry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data), // Comment: Send enquiry form data to backend
+        body: JSON.stringify(data),
       });
 
-      // Handle response from the API
       if (res.ok) {
         toast.success("Enquiry saved successfully.");
         reset();
-        setValue("staff", currentAdmin); // reassign after reset
+        setValue("staff", currentAdmin);
       } else {
         toast.error("Failed to save enquiry.");
       }
     } catch (error) {
-      // Handle API errors
       toast.error("Something went wrong.");
     }
   };
+
+  
 
 return (
   <div className="flex justify-center items-center min-h-screen bg-gray-100 p-6">
