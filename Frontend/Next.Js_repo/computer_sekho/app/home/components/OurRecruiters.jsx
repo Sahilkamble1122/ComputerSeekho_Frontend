@@ -35,7 +35,7 @@ export default function OurRecruiters() {
       </div>
 
       <Link
-        href="/recruiters"
+        href="/home/recruiters"
         className="mt-8 inline-block bg-red-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-900 transition"
       >
         SEE MORE

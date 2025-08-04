@@ -1,5 +1,5 @@
 import Image from "next/image";
-import OurRecruiters from "./placements/components/OurRecruiters";
+import OurRecruiters from "./home/components/OurRecruiters";
 export default function Home() {
   return (
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
