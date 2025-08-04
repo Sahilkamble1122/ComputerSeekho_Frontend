@@ -27,7 +27,7 @@ export default function BatchPlacementCard({
 
       <button
         onClick={() => router.push(`/placement-details/${slug}`)}
-        className="bg-white border border-blue-600 text-blue-600 px-3 py-1 rounded-full font-semibold my-2 cursor-pointer"
+        className="bg-white border border-blue-600 text-blue-600 px-3 py-1 rounded-full font-semibold my-2 cursor-pointer hover:bg-blue-600 hover:text-white transition"
       >
         {batch}
       </button>

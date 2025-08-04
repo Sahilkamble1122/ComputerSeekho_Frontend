@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import BatchPlacementCard from "./components/BatchPlacementCard";
-
 export default function PlacementPage() {
   const [batches, setBatches] = useState([]);
 
