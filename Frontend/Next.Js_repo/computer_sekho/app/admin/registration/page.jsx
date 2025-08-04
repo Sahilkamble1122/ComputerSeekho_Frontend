@@ -71,17 +71,30 @@ export default function EnquiryForm() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
       alert("❌ Please correct the errors before submitting.");
       return;
     }
 
-    console.log("✅ Submitted:", form);
-    alert("Form submitted successfully!");
-    setForm(initialFormState);
-    setErrors({});
+    try {
+      const response = await fetch("http://localhost:8080/api/students", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      if (!response.ok) throw new Error("Failed to submit");
+
+      alert("✅ Form submitted successfully!");
+      setForm(initialFormState);
+      setErrors({});
+    } catch (error) {
+      alert("❌ Submission failed: " + error.message);
+    }
   };
 
   return (

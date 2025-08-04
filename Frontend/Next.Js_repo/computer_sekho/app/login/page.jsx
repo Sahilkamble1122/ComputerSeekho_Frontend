@@ -1,32 +1,51 @@
 'use client';
 
 import { useState } from 'react';
-// import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-//   const router = useRouter();
+  const router = useRouter();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
 
     if (!username || !password) {
       setError('Both fields are required');
       return;
     }
 
-    // if (username === 'admin' && password === 'admin123') {
-    //   router.push('/dashboard');
-    // } else {
-    //   setError('Invalid credentials');
-    // }
+    try {
+      const response = await fetch('http://localhost:8080/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid credentials');
+      }
+
+      // Save token to localStorage
+      localStorage.setItem('token', data.token);
+
+      // Redirect to dashboard or another page
+      router.push('/admin');
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
     <div className="flex min-h-screen">
-      {/* Left Side: Image, hidden on small screens */}
+      {/* Left Side: Image */}
       <div className="hidden md:flex md:w-[65%] items-center justify-center bg-[url('/bg_image.jpg')] bg-cover bg-center">
         <img
           src="/vita_logo.png"
@@ -43,8 +62,6 @@ export default function LoginPage() {
 
           <div className="absolute w-full max-w-[400px] px-8 py-5 rounded-lg shadow-[0_2px_5px_rgba(0,0,0,0.4)] backdrop-blur-[5px] bg-white/30 flex flex-col font-sans">
             <p className="text-[28px] font-extrabold leading-none">Admin login</p>
-            <p className="text-[14px] font-medium mb-4"></p>
-
             <form onSubmit={handleLogin}>
               <div className="mt-2">
                 <p className="text-[14px] font-semibold text-slate-500 mt-[15px] mb-0">Username</p>
@@ -77,7 +94,6 @@ export default function LoginPage() {
                 Sign In
               </button>
             </form>
-
           </div>
         </div>
       </div>
