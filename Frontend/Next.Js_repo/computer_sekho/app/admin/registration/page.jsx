@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-
+import { useEffect } from "react";
 export default function EnquiryForm() {
   const initialFormState = {
     name: "",
@@ -21,11 +21,43 @@ export default function EnquiryForm() {
     chequeNo: "",
     bankName: "",
     paymentDate: "",
-    photo: "",
+    photo: null, // changed from ""
+    batchId: "",
   };
 
   const [form, setForm] = useState(initialFormState);
   const [errors, setErrors] = useState({});
+  const [preview, setPreview] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        const res = await fetch("http://localhost:8080/api/courses"); // 🔁 replace with your actual API for course dropdown field
+        const data = await res.json();
+        setCourses(data);
+      } catch (error) {
+        console.error("Failed to fetch courses", error);
+      }
+    }
+
+    fetchCourses();
+  }, []);
+
+  useEffect(() => {
+    async function fetchBatches() {
+      try {
+        const res = await fetch("http://localhost:8080/api/batches/upcoming"); // 🔁 adjust as needed upcoming course wala api dena hai batch
+        const data = await res.json();
+        setBatches(data);
+      } catch (error) {
+        console.error("Failed to fetch batches", error);
+      }
+    }
+
+    fetchBatches();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,6 +93,7 @@ export default function EnquiryForm() {
       !form.bankName.trim()
     )
       newErrors.bankName = "Bank name is required";
+    if (!form.batchId) newErrors.batchId = "Batch is required";
     if (
       (form.paymentMode === "Cheque" || form.paymentMode === "DD") &&
       !form.paymentDate
@@ -79,34 +112,37 @@ export default function EnquiryForm() {
     }
 
     try {
-  const response = await fetch("http://localhost:8080/api/students", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      studentName: form.name,
-      studentAddress: form.resAddress,
-      studentGender: form.gender,
-      photoUrl: form.photo,
-      studentDob: `${form.dob}T00:00:00`,
-      studentQualification: form.qualification ,
-      studentMobile: form.mobile,
-      studentEmail: form.email,
-      courseId: form.course,
-      studentPassword: "pass123",
-      studentUsername: form.email,
-    }),
-  });
+      const formData = new FormData();
 
-  if (!response.ok) throw new Error("Failed to register student");
+      formData.append("studentName", form.name);
+      formData.append("studentAddress", form.resAddress);
+      formData.append("studentGender", form.gender);
+      formData.append("studentDob", `${form.dob}T00:00:00`);
+      formData.append("studentQualification", form.qualification);
+      formData.append("studentMobile", form.mobile);
+      formData.append("studentEmail", form.email);
+      formData.append("courseId", form.course);
+      formData.append("studentPassword", "pass123");
+      formData.append("studentUsername", form.email);
+      formData.append("batchId", form.batchId);
 
-  alert("✅ Student registered successfully!");
-  setForm(initialFormState);
-} catch (error) {
-  alert("❌ Registration failed: " + error.message);
-}
+      if (form.photo) {
+        formData.append("photo", form.photo); // ✅ send file
+      }
 
+      const response = await fetch("http://localhost:8080/api/students", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Failed to register student");
+
+      alert("✅ Student registered successfully!");
+      setForm(initialFormState);
+      setPreview(null);
+    } catch (error) {
+      alert("❌ Registration failed: " + error.message);
+    }
   };
 
   return (
@@ -180,9 +216,9 @@ export default function EnquiryForm() {
               Student Photo
             </label>
             <div className="w-24 h-24 border rounded bg-white flex items-center justify-center overflow-hidden">
-              {form.photo ? (
+              {preview ? (
                 <img
-                  src={form.photo}
+                  src={preview}
                   alt="Preview"
                   className="object-cover w-full h-full"
                 />
@@ -200,9 +236,9 @@ export default function EnquiryForm() {
                 onChange={(e) => {
                   const file = e.target.files[0];
                   if (file) {
+                    setForm((prev) => ({ ...prev, photo: file }));
                     const reader = new FileReader();
-                    reader.onload = () =>
-                      setForm((prev) => ({ ...prev, photo: reader.result }));
+                    reader.onloadend = () => setPreview(reader.result);
                     reader.readAsDataURL(file);
                   }
                 }}
@@ -223,7 +259,7 @@ export default function EnquiryForm() {
           <p className="text-red-600 text-sm">{errors.resAddress}</p>
         )}
 
-        <label className="block font-semibold">Office Address:</label>
+        <label className="block font-semibold">Official Address:</label>
         <textarea
           name="officeAddress"
           value={form.officeAddress}
@@ -232,7 +268,7 @@ export default function EnquiryForm() {
         />
 
         <div className="flex items-center flex-wrap gap-4 text-sm mt-4">
-          <label className="font-semibold">Phone (R):</label>
+          <label className="font-semibold">Phone:</label>
           <input
             type="tel"
             name="phoneR"
@@ -242,7 +278,7 @@ export default function EnquiryForm() {
             pattern="[0-9]{6,12}"
           />
 
-          <label className="font-semibold">Phone (O):</label>
+          <label className="font-semibold">Secondary Phone :</label>
           <input
             type="tel"
             name="phoneO"
@@ -297,19 +333,45 @@ export default function EnquiryForm() {
           <label className="block font-semibold mb-1">
             Course Enrolled For:
           </label>
-          <input
-            type="text"
+          <select
             name="course"
             value={form.course}
             onChange={handleChange}
             className="input"
-          />
+          >
+            <option value="">-- Select Course --</option>
+            {courses.map((course) => (
+              <option key={course.id} value={course.id}>
+                {course.id} - {course.courseName}
+              </option>
+            ))}
+          </select>
           {errors.course && (
             <p className="text-red-600 text-sm">{errors.course}</p>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block font-semibold mb-1">Batch Name:</label>
+          <select
+            name="batchId"
+            value={form.batchId}
+            onChange={handleChange}
+            className="input"
+          >
+            <option value="">-- Select Batch --</option>
+            {batches.map((batch) => (
+              <option key={batch.id} value={batch.id}>
+                {batch.id} - {batch.batchName}
+              </option>
+            ))}
+          </select>
+          {errors.batchId && (
+            <p className="text-red-600 text-sm">{errors.batchId}</p>
+          )}
+        </div>
+
+        {/* <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block font-semibold mb-1">Start Date:</label>
             <input
@@ -336,9 +398,9 @@ export default function EnquiryForm() {
               <p className="text-red-600 text-sm">{errors.time}</p>
             )}
           </div>
-        </div>
+        </div> */}
 
-        <div>
+        {/* <div>
           <label className="block font-semibold">Payment Mode:</label>
           <div className="flex gap-4 mt-1">
             {["Cash", "Cheque", "DD"].map((mode) => (
@@ -357,10 +419,10 @@ export default function EnquiryForm() {
           {errors.paymentMode && (
             <p className="text-red-600 text-sm">{errors.paymentMode}</p>
           )}
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
+          {/* <div>
             <input
               type="number"
               name="amount"
@@ -372,8 +434,8 @@ export default function EnquiryForm() {
             {errors.amount && (
               <p className="text-red-600 text-sm">{errors.amount}</p>
             )}
-          </div>
-          <div>
+          </div> */}
+          {/* <div>
             <input
               type="text"
               name="chequeNo"
@@ -385,8 +447,8 @@ export default function EnquiryForm() {
             {errors.chequeNo && (
               <p className="text-red-600 text-sm">{errors.chequeNo}</p>
             )}
-          </div>
-          <div>
+          </div> */}
+          {/* <div>
             <input
               type="text"
               name="bankName"
@@ -398,10 +460,10 @@ export default function EnquiryForm() {
             {errors.bankName && (
               <p className="text-red-600 text-sm">{errors.bankName}</p>
             )}
-          </div>
+          </div> */}
         </div>
 
-        <div>
+        {/* <div> //this is for payment date 
           <label className="block font-semibold mb-1">Payment Date:</label>
           <input
             type="date"
@@ -413,7 +475,7 @@ export default function EnquiryForm() {
           {errors.paymentDate && (
             <p className="text-red-600 text-sm">{errors.paymentDate}</p>
           )}
-        </div>
+        </div> */}
 
         <button
           type="submit"
