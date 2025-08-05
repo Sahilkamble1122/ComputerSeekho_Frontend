@@ -3,14 +3,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent } from './components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './components/ui/table';
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from './components/ui/select';
-import { Switch } from './components/ui/switch';
-import { Label } from './components/ui/label';
-import { Input } from './components/ui/input';
-import { Button } from './components/ui/button';
-import { toast } from './components/ui/use-toast';
+import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 
 export default function ManagePlacementsPage() {
