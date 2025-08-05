@@ -34,7 +34,7 @@ export default function AdminDashboard({ adminName }) {
           <Link href="/admin/enquiries/new">
             <Button>Add Enquiry</Button>
           </Link>
-          <Link href="/admin/students/new">
+          <Link href="/admin/registration">
             <Button variant="outline">Add Student</Button>
           </Link>
         </div>

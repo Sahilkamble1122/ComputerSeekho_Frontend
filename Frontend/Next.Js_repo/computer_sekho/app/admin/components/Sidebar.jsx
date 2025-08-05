@@ -1,27 +1,36 @@
-'use client'; // needed for interactivity in App Router
+'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Image, Users, ClipboardCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  FileText,
+  Image,
+  Users,
+  ClipboardCheck,
+  BookOpen,
+  UserCog,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const navItems = [
   { name: 'Follow Ups', icon: ClipboardCheck, path: '/admin' },
   { name: 'Enquiries', icon: FileText, path: '/admin/enquiries' },
   { name: 'Gallery', icon: Image, path: '/admin/gallery/album' },
   { name: 'Placements', icon: Users, path: '/admin/placements' },
+  { name: 'Staffs', icon: UserCog, path: '/admin/staffs' },
+  { name: 'Courses', icon: BookOpen, path: '/admin/courses' },
 ];
 
 export default function Sidebar({ admin }) {
   const [collapsed, setCollapsed] = useState(false);
+  const pathname = usePathname();
+
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setCollapsed(true);
-      } else {
-        setCollapsed(false);
-      }
+      setCollapsed(window.innerWidth < 768);
     };
-
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -54,17 +63,26 @@ export default function Sidebar({ admin }) {
       </div>
 
       {/* Navigation */}
-      <nav className="space-y-4 mt-6">
-        {navItems.map((item) => (
-          <Link
-            key={item.name}
-            href={item.path}
-            className="flex items-center gap-3 px-4 py-2 rounded hover:bg-gray-700 transition"
-          >
-            <item.icon size={20} />
-            {!collapsed && <span>{item.name}</span>}
-          </Link>
-        ))}
+      <nav className="space-y-2 mt-6">
+        {navItems.map((item) => {
+          const isActive =
+            item.path === '/admin'
+              ? pathname === '/admin'
+              : pathname.startsWith(item.path);
+
+          return (
+            <Link
+              key={item.name}
+              href={item.path}
+              className={`flex items-center gap-3 px-4 py-2 rounded transition ${
+                isActive ? 'bg-gray-700 font-semibold' : 'hover:bg-gray-700'
+              }`}
+            >
+              <item.icon size={20} />
+              {!collapsed && <span>{item.name}</span>}
+            </Link>
+          );
+        })}
       </nav>
     </aside>
   );
