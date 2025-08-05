@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "./components/ui/skeleton";
 import AlbumCard from "./components/AlbumCard";
 import Pagination from "./components/Pagination";
 
