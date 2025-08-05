@@ -152,7 +152,7 @@ export default function EnquiryForm() {
       formData.append("studentName", form.name);
       formData.append("studentAddress", form.resAddress);
       formData.append("studentGender", form.gender);
-      formData.append("studentDob", `${form.dob}T00:00:00`);
+      formData.append("studentDob", form.dob);
       formData.append("studentQualification", form.qualification);
       formData.append("studentMobile", form.mobile);
       formData.append("studentEmail", form.email);
