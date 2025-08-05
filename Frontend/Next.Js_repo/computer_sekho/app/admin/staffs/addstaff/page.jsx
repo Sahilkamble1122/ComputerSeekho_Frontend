@@ -1,4 +1,9 @@
 'use client';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState } from 'react';
 
 export default function StaffRegister() {
@@ -58,135 +63,120 @@ const handleSubmit = async (e) => {
 };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 w-full max-w-lg">
-        <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">Staff Registration</h2>
-        <p className="text-center text-gray-600 mb-8 text-sm">Fill out the form below to register a new staff member.</p>
+    <div className="min-h-screen flex items-center justify-center bg-muted p-6">
+      <Card className="w-full max-w-2xl border shadow-md">
+        <CardContent className="p-8">
+          <h2 className="text-2xl font-bold text-center mb-4">Staff Registration</h2>
+          <p className="text-sm text-muted-foreground text-center mb-6">
+            Fill out the form below to register a new staff member.
+          </p>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Staff Name */}
-          <div>
-            <label htmlFor="staff_name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-            <input
-              type="text"
-              id="staff_name"
-              name="staff_name"
-              placeholder="Enter full name"
-              value={formData.staff_name}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-              required
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Full Name */}
+            <div>
+              <Label htmlFor="staff_name">Full Name</Label>
+              <Input
+                id="staff_name"
+                name="staff_name"
+                placeholder="Enter full name"
+                value={formData.staff_name}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          {/* Photo URL */}
-          <div>
-            <label htmlFor="photo_url" className="block text-sm font-medium text-gray-700 mb-1">Photo URL (Optional)</label>
-            <input
-              type="url"
-              id="photo_url"
-              name="photo_url"
-              placeholder="e.g., http://example.com/profile.jpg"
-              value={formData.photo_url}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
+            {/* Photo URL */}
+            <div>
+              <Label htmlFor="photo_url">Photo URL (optional)</Label>
+              <Input
+                id="photo_url"
+                name="photo_url"
+                placeholder="e.g., http://example.com/image.jpg"
+                value={formData.photo_url}
+                onChange={handleChange}
+              />
+            </div>
 
-          {/* Staff Mobile */}
-          <div>
-            <label htmlFor="staff_mobile" className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-            <input
-              type="tel"
-              id="staff_mobile"
-              name="staff_mobile"
-              placeholder="Enter mobile number"
-              value={formData.staff_mobile}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-              required
-            />
-          </div>
+            {/* Mobile */}
+            <div>
+              <Label htmlFor="staff_mobile">Mobile Number</Label>
+              <Input
+                id="staff_mobile"
+                name="staff_mobile"
+                placeholder="Enter mobile number"
+                type="tel"
+                value={formData.staff_mobile}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          {/* Staff Email */}
-          <div>
-            <label htmlFor="staff_email" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-            <input
-              type="email"
-              id="staff_email"
-              name="staff_email"
-              placeholder="Enter email address"
-              value={formData.staff_email}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-              required
-            />
-          </div>
+            {/* Email */}
+            <div>
+              <Label htmlFor="staff_email">Email Address</Label>
+              <Input
+                id="staff_email"
+                name="staff_email"
+                placeholder="Enter email"
+                type="email"
+                value={formData.staff_email}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          {/* Staff Username */}
-          <div>
-            <label htmlFor="staff_username" className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-            <input
-              type="text"
-              id="staff_username"
-              name="staff_username"
-              placeholder="Choose a username"
-              value={formData.staff_username}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-              required
-            />
-          </div>
+            {/* Username */}
+            <div>
+              <Label htmlFor="staff_username">Username</Label>
+              <Input
+                id="staff_username"
+                name="staff_username"
+                placeholder="Enter username"
+                value={formData.staff_username}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          {/* Staff Password */}
-          <div>
-            <label htmlFor="staff_password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              type="password"
-              id="staff_password"
-              name="staff_password"
-              placeholder="Create a password"
-              value={formData.staff_password}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-              required
-            />
-          </div>
+            {/* Password */}
+            <div>
+              <Label htmlFor="staff_password">Password</Label>
+              <Input
+                id="staff_password"
+                name="staff_password"
+                placeholder="Enter password"
+                type="password"
+                value={formData.staff_password}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          {/* Staff Role */}
-          <div>
-            <label htmlFor="staff_role" className="block text-sm font-medium text-gray-700 mb-1">Staff Role</label>
-            <select
-              id="staff_role"
-              name="staff_role"
-              value={formData.staff_role}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-              required
-            >
-              <option value="">Select a role</option>
-              <option value="Teaching">Teaching Staff</option>
-              <option value="NonTeaching">Non Teaching</option>
-              <option value="HouseKeeping">Ho use Keeping</option>
-            </select>
-          </div>
+            {/* Staff Role */}
+            <div>
+              <Label htmlFor="staff_role">Role</Label>
+              <Select
+                value={formData.staff_role}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, staff_role: value }))
+                }
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Teaching">Teaching</SelectItem>
+                  <SelectItem value="NonTeaching">Non Teaching</SelectItem>
+                  <SelectItem value="HouseKeeping">House Keeping</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="text-center pt-2">
-            <button
-              type="submit"
-              // Custom inline style for RGB color
-              style={{ backgroundColor: 'rgb(236,28,35)', color: 'white' }}
-              className="w-full py-2 px-4 font-semibold rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200"
-              // Adding a custom hover style using Tailwind's arbitrary variant or a separate class
-              // For a simple demo, we'll keep the hover simple, or use a custom CSS class if needed
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgb(200, 24, 30)'} // Darker red on hover
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgb(236,28,35)'} // Original red
-            >
-              REGISTER STAFF
-            </button>
-          </div>
-        </form>
-      </div>
+            <Button type="submit" className="w-full mt-4">Register Staff</Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

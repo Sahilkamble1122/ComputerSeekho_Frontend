@@ -116,44 +116,25 @@ export default function EnquiryForm() {
   };
 
   const validateForm = () => {
-    const newErrors = {};
-    if (!form.name.trim()) newErrors.name = "Name is required";
-    if (!form.dob) newErrors.dob = "Date of Birth is required";
-    if (!form.gender) newErrors.gender = "Gender is required";
-    if (!form.resAddress.trim())
-      newErrors.resAddress = "Residential address is required";
-    if (!form.mobile.trim() || !/^\d{10}$/.test(form.mobile))
-      newErrors.mobile = "Valid 10-digit mobile number is required";
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
-      newErrors.email = "Valid email is required";
-    if (!form.qualification.trim())
-      newErrors.qualification = "Qualification is required";
-    if (!form.course.trim()) newErrors.course = "Course is required";
-    if (!form.startDate) newErrors.startDate = "Start date is required";
-    if (!form.time) newErrors.time = "Class time is required";
-    if (!form.paymentMode) newErrors.paymentMode = "Payment mode is required";
-    if (!form.amount || form.amount <= 0)
-      newErrors.amount = "Amount must be greater than 0";
-    if (
-      (form.paymentMode === "Cheque" || form.paymentMode === "DD") &&
-      !form.chequeNo.trim()
-    )
-      newErrors.chequeNo = "Cheque/DD No. is required";
-    if (
-      (form.paymentMode === "Cheque" || form.paymentMode === "DD") &&
-      !form.bankName.trim()
-    )
-      newErrors.bankName = "Bank name is required";
-    if (!form.batchId) newErrors.batchId = "Batch is required";
-    if (
-      (form.paymentMode === "Cheque" || form.paymentMode === "DD") &&
-      !form.paymentDate
-    )
-      newErrors.paymentDate = "Payment date is required";
+  const newErrors = {};
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  if (!form.name.trim()) newErrors.name = "Name is required";
+  if (!form.dob) newErrors.dob = "Date of Birth is required";
+  if (!form.gender) newErrors.gender = "Gender is required";
+  if (!form.resAddress.trim())
+    newErrors.resAddress = "Residential address is required";
+  if (!form.mobile.trim() || !/^\d{10}$/.test(form.mobile))
+    newErrors.mobile = "Valid 10-digit mobile number is required";
+  if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
+    newErrors.email = "Valid email is required";
+  if (!form.qualification.trim())
+    newErrors.qualification = "Qualification is required";
+  if (!form.course.trim()) newErrors.course = "Course is required";
+  if (!form.batchId) newErrors.batchId = "Batch is required";
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
