@@ -6,7 +6,7 @@ export default function Home() {
       <h1 className="text-4xl font-bold text-green-400">
         Tailwind is working! ✅
       </h1>
-      <OurRecruiters />
+
     </div>
   );
 }

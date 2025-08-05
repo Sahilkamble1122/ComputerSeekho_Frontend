@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import Link from "next/link"; 
+import { Button } from "../../../components/ui/button";
 import ImageGallery from "../components/ImageGallery";
 
 export default function AlbumDetailsPage() {
