@@ -1,5 +1,5 @@
 // components/WhyChooseUs.tsx
-import Image from 'next/image';
+import Image from "next/image";
 
 export default function WhyChooseUs() {
   return (
@@ -8,7 +8,7 @@ export default function WhyChooseUs() {
         {/* Left Image */}
         <div className="w-full md:w-1/2 flex justify-center">
           <Image
-            src="/whychooseus.jpg"
+            src="/vita12.jpg"
             alt="Why Choose SM VITA"
             width={600}
             height={400}
@@ -22,15 +22,16 @@ export default function WhyChooseUs() {
             Why Choose <span className="text-red-500">SM VITA</span> ?
           </h2>
           <p className="text-lg mb-6 text-gray-200">
-            Our institute has been present for over 20 years in the market. We make the most of all our students.
+            Our institute has been present for over 20 years in the market. We
+            make the most of all our students.
           </p>
 
           <ul className="space-y-4 text-white text-lg">
             {[
-              'Best in class Infrastructure',
-              'Best Faculty / Teachers',
-              'Best Learning Methodology',
-              'More than 95% Placement for 10 Consecutive batches',
+              "Best in class Infrastructure",
+              "Best Faculty / Teachers",
+              "Best Learning Methodology",
+              "More than 95% Placement for 10 Consecutive batches",
             ].map((item, index) => (
               <li key={index} className="flex items-start">
                 <span className="text-red-500 mr-3 text-xl">✔️</span>
