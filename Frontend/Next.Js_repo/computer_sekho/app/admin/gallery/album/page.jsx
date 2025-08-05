@@ -26,7 +26,7 @@ export default function AddAlbum() {
 
   const fetchAlbums = async () => {
     try {
-      const res = await fetch("/api/albums"); // ✅ Fetch all albums from API
+      const res = await fetch("http://localhost:8080/api/albums"); // ✅ Fetch all albums from API
       const data = await res.json();
       setAlbums(data);
     } catch (err) {
@@ -39,7 +39,7 @@ export default function AddAlbum() {
     if (!confirm("Are you sure you want to delete this album?")) return;
 
     try {
-      const res = await fetch(`/api/albums/${id}`, {
+      const res = await fetch(`http://localhost:8080/api/albums/${id}`, {
         method: "DELETE", // ✅ Delete album by ID
       });
 
@@ -53,46 +53,45 @@ export default function AddAlbum() {
   };
 
   const handleCreateAlbum = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // ✅ Form validation for empty required fields
-    if (!albumName || !startDate || !endDate) {
-      return toast.error("Please fill in all required fields");
-    }
+  if (!albumName || !startDate || !endDate) {
+    return toast.error("Please fill in all required fields");
+  }
 
-    if (new Date(startDate) > new Date(endDate)) {
-      return toast.error("Start date cannot be after end date");
-    }
+  if (new Date(startDate) > new Date(endDate)) {
+    return toast.error("Start date cannot be after end date");
+  }
 
-    try {
-      const res = await fetch("/api/albums", {
-        method: "POST", // ✅ Create new album
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          album_name: albumName,
-          album_description: description,
-          album_start_date: startDate,
-          album_end_date: endDate,
-          album_is_active: isActive,
-        }),
-      });
+  try {
+    const res = await fetch("http://localhost:8080/api/albums", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        albumName: albumName,
+        albumDescription: description,
+         startDate: `${startDate}T00:00:00`,
+  endDate: `${endDate}T00:00:00`,
+        albumIsActive: isActive,
+      }),
+    });
 
-      if (!res.ok) throw new Error("Album creation failed");
-      toast.success("Album created successfully");
-      setAlbumName("");
-      setDescription("");
-      setStartDate("");
-      setEndDate("");
-      setIsActive(true);
-      fetchAlbums(); // ✅ Refresh albums after creation
-    } catch (err) {
-      console.error(err);
-      toast.error("Album creation failed");
-    }
-  };
+    if (!res.ok) throw new Error("Album creation failed");
+    toast.success("Album created successfully");
 
+    setAlbumName("");
+    setDescription("");
+    setStartDate("");
+    setEndDate("");
+    setIsActive(true);
+    fetchAlbums();
+  } catch (err) {
+    console.error(err);
+    toast.error("Album creation failed");
+  }
+};
   const handleAddImages = async (e) => {
     e.preventDefault();
     if (!selectedAlbumId || imageFiles.length === 0) {
