@@ -14,7 +14,7 @@ export default function AdminDashboard({ adminName }) {
   useEffect(() => {
     const fetchEnquiries = async () => {
       try {
-        const res = await fetch('/api/enquiries');
+        const res = await fetch('http://localhost:8080/api/enquiries');
         if (!res.ok) throw new Error('Failed to fetch enquiries');
         const data = await res.json();
         setEnquiries(data);
@@ -25,6 +25,11 @@ export default function AdminDashboard({ adminName }) {
     };
     fetchEnquiries();
   }, []);
+
+//fetch data from staff table 
+
+
+
 
   return (
     <div className="p-6">
@@ -57,8 +62,8 @@ export default function AdminDashboard({ adminName }) {
             </TableHeader>
             <TableBody>
               {enquiries.map((enquiry) => (
-                <TableRow key={enquiry.id}>
-                  <TableCell>{enquiry.id}</TableCell>
+                <TableRow key={enquiry.enquiryId}>
+                  <TableCell>{enquiry.enquiryId}</TableCell>
                   <TableCell>{enquiry.enquirerName}</TableCell>
                   <TableCell>{enquiry.studentName}</TableCell>
                   <TableCell>{enquiry.phone}</TableCell>

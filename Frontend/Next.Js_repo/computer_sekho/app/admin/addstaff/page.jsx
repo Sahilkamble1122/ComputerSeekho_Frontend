@@ -16,34 +16,46 @@ export default function StaffRegister() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch('http://localhost:8080/api/staff', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    const payload = {
+      staffName: formData.staff_name,
+      photoUrl: formData.photo_url,
+      staffMobile: formData.staff_mobile,
+      staffEmail: formData.staff_email,
+      staffUsername: formData.staff_username,
+      staffPassword: formData.staff_password,
+      staffRole: formData.staff_role,
+      createdDate: new Date().toISOString(),
+      updatedDate: new Date().toISOString(),
+    };
+
+    const res = await fetch("http://localhost:8080/api/staff", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      alert("Staff registered successfully.");
+      setFormData({
+        staff_name: '',
+        photo_url: '',
+        staff_mobile: '',
+        staff_email: '',
+        staff_username: '',
+        staff_password: '',
+        staff_role: '',
       });
-      const data = await res.json();
-      if (res.ok) {
-        alert('Staff registered successfully!');
-        setFormData({
-          staff_name: '',
-          photo_url: '',
-          staff_mobile: '',
-          staff_email: '',
-          staff_username: '',
-          staff_password: '',
-          staff_role: '',
-        });
-      } else {
-        alert(`Registration failed: ${data.message || 'Server error'}`);
-      }
-    } catch (err) {
-      alert('Registration failed! Please check your network connection.');
-      console.error('Registration error:', err);
+    } else {
+      alert("Failed to register staff.");
     }
-  };
+  } catch (error) {
+    alert("Something went wrong.");
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -155,7 +167,7 @@ export default function StaffRegister() {
               <option value="">Select a role</option>
               <option value="Teaching">Teaching Staff</option>
               <option value="NonTeaching">Non Teaching</option>
-              <option value="HouseKeeping">House Keeping</option>
+              <option value="HouseKeeping">Ho use Keeping</option>
             </select>
           </div>
 

@@ -134,19 +134,19 @@ export default function AddAlbum() {
           <TabsTrigger value="images">Add Images</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="view">
-          <h3 className="text-lg font-semibold mb-4">Existing Albums</h3>
-          <ul className="space-y-2">
-            {albums.map((album) => (
-              <li key={album.album_id} className="flex items-center justify-between px-4 py-2 border rounded hover:bg-gray-50">
-                <span>{album.album_name}</span>
-                <Button variant="destructive" size="sm" onClick={() => handleDeleteAlbum(album.album_id)}>
-                  Delete
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </TabsContent>
+       <TabsContent value="view">
+  <h3 className="text-lg font-semibold mb-4">Existing Albums</h3>
+  <ul className="space-y-2">
+    {albums.map((album) => (
+      <li key={album.albumId} className="flex items-center justify-between px-4 py-2 border rounded hover:bg-gray-50">
+        <span>{album.albumName}</span>
+        <Button variant="destructive" size="sm" onClick={() => handleDeleteAlbum(album.albumId)}>
+          Delete
+        </Button>
+      </li>
+    ))}
+  </ul>
+</TabsContent>
 
         <TabsContent value="album">
           <form onSubmit={handleCreateAlbum} className="space-y-4">
@@ -175,21 +175,21 @@ export default function AddAlbum() {
         </TabsContent>
 
         <TabsContent value="images">
-          <form onSubmit={handleAddImages} className="space-y-4">
-            <Label>Select Album</Label>
-            <select
-              value={selectedAlbumId}
-              onChange={(e) => setSelectedAlbumId(e.target.value)}
-              className="w-full p-2 border rounded"
-              required
-            >
-              <option value="">Select</option>
-              {albums.map((a) => (
-                <option key={a.album_id} value={a.album_id}>
-                  {a.album_name}
-                </option>
-              ))}
-            </select>
+  <form onSubmit={handleAddImages} className="space-y-4">
+    <Label>Select Album</Label>
+    <select
+      value={selectedAlbumId}
+      onChange={(e) => setSelectedAlbumId(e.target.value)}
+      className="w-full p-2 border rounded"
+      required
+    >
+      <option value="">Select</option>
+      {albums.map((a) => (
+        <option key={a.albumId} value={a.albumId}>
+          {a.albumName}
+        </option>
+      ))}
+    </select>
 
             <Label>Upload Images</Label>
             <Input
