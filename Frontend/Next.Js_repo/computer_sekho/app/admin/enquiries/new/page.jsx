@@ -25,7 +25,7 @@ export default function EnquiryForm() {
     const loginAndFetchAdmin = async () => {
       try {
         // Replace with your actual credentials (for demo/dev only)
-        const loginResponse = await fetch('http://localhost:8080/api/auth/login', {
+        const loginResponse = await fetch('http://localhost:8080/api/enquiries', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

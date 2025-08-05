@@ -79,22 +79,34 @@ export default function EnquiryForm() {
     }
 
     try {
-      const response = await fetch("http://localhost:8080/api/students", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
-      });
+  const response = await fetch("http://localhost:8080/api/students", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      studentName: form.name,
+      studentAddress: form.resAddress,
+      studentGender: form.gender,
+      photoUrl: form.photo,
+      studentDob: `${form.dob}T00:00:00`,
+      studentQualification: form.qualification ,
+      studentMobile: form.mobile,
+      studentEmail: form.email,
+      courseId: form.course,
+      studentPassword: "pass123",
+      studentUsername: form.email,
+    }),
+  });
 
-      if (!response.ok) throw new Error("Failed to submit");
+  if (!response.ok) throw new Error("Failed to register student");
 
-      alert("✅ Form submitted successfully!");
-      setForm(initialFormState);
-      setErrors({});
-    } catch (error) {
-      alert("❌ Submission failed: " + error.message);
-    }
+  alert("✅ Student registered successfully!");
+  setForm(initialFormState);
+} catch (error) {
+  alert("❌ Registration failed: " + error.message);
+}
+
   };
 
   return (
