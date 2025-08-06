@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
-import { Skeleton } from "./components/ui/skeleton";
+import { useEffect, useState } from "react";
 import AlbumCard from "./components/AlbumCard";
 import Pagination from "./components/Pagination";
 

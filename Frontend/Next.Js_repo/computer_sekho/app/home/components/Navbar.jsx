@@ -39,8 +39,8 @@ const Navbar = () => {
     <header
       className={`w-full z-40 transition-colors duration-300 ${
         scrolled
-          ? "bg-white/60 bg-opacity-50 backdrop-blur-md shadow-md fixed"
-          : "bg-white"
+          ? "bg-white bg-opacity-50 backdrop-blur-md shadow-md fixed"
+          : "bg-gray-200"
       }`}
     >
       <div className="container mx-auto flex items-center justify-between py-4 px-4 h-[73px]">
@@ -58,7 +58,7 @@ const Navbar = () => {
         {/* Nav Links - centered with space */}
         <nav className="flex-1 flex justify-center">
           <div className="flex space-x-8 text-black font-medium items-center">
-            <Link href="#" className="hover:text-blue-600">
+            <Link href="/home" className="hover:text-blue-600">
               Home
             </Link>
 

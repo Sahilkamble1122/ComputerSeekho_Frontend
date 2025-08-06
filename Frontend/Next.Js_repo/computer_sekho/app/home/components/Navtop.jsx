@@ -7,7 +7,7 @@ const Navtop = () => {
     <div className="w-full h-[50px] flex items-stretch relative z-10 overflow-hidden text-sm font-medium">
       {/* Red Section with Slanted End */}
       <div className="flex-1 bg-red-600 text-white flex items-center justify-center relative z-40 -mr-[25px]">
-        <span>HAVE ANY QUESTION ? +880 5698 598 6587</span>
+        <span>HAVE ANY QUESTION ? +9029 435 311</span>
       </div>
 
       {/* Slanted Diagonal Divider */}
@@ -22,7 +22,7 @@ const Navtop = () => {
 
       {/* Blue Section */}
       <div className="w-[250px] bg-[#2c285e] text-white flex items-center justify-end pr-10 space-x-6 z-40">
-        <Link href="/login" className="hover:underline">LOGIN</Link>
+        <Link href="/login" className="hover:underline">Login</Link>
       </div>
 
       {/* Custom CSS Clip Paths */}

@@ -17,8 +17,8 @@ const recruiters = [
 export default function OurRecruiters() {
   return (
     <div className="text-center my-10 px-8">
-      <h2 className="text-2xl font-bold text-blue-900 mb-6">
-        Major Recruiters
+      <h2 className="text-4xl font-bold text-blue-900 mb-6">
+        Major Recuriters
       </h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-y-8 gap-x-8 justify-items-center">
