@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Coursecard from "@/app/courses/components/Coursecard";
 import Link from "next/link";
-import CourseCard from "../../courses/components/CourseCard";
+import { useEffect, useState } from "react";
+
 export default function CoursesSection() {
   const [courses, setCourses] = useState([]);
 
@@ -15,7 +16,7 @@ export default function CoursesSection() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
-      <h2 className="text-3xl font-bold text-center text-red-600 mb-8">
+      <h2 className="text-3xl font-bold text-center text-blue-900 mb-8">
         Courses We Offer
       </h2>
 
@@ -25,7 +26,7 @@ export default function CoursesSection() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {courses.slice(0, 3).map((course) => (
-              <CourseCard key={course.courseId} course={course} />
+              <Coursecard key={course.courseId} course={course} />
             ))}
           </div>
 
