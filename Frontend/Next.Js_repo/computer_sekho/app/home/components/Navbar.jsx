@@ -79,7 +79,7 @@ const Navbar = () => {
                     Batch Wise
                   </Link>
                   <Link
-                    href="/placements/partners"
+                    href="/home/recruiters"
                     className="block px-4 py-2 hover:text-blue-400"
                   >
                     Recruiters

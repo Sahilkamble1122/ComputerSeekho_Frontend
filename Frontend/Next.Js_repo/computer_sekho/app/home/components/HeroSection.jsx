@@ -18,12 +18,7 @@ const HeroSection = () => {
           <p className="mb-6 max-w-2xl mx-auto">
             Education unlocks the mind, empowers the soul, and builds the foundation for everything we become and make a lasting impact on the world.
           </p>
-          <a
-            href="#"
-            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded"
-          >
-            LEARN MORE
-          </a>
+        
         </div>
       </div>
     </section>
