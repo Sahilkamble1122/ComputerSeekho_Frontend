@@ -3,7 +3,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useState } from 'react';
 
 export default function StaffRegister() {
@@ -21,46 +27,57 @@ export default function StaffRegister() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  try {
-    const payload = {
-      staffName: formData.staff_name,
-      photoUrl: formData.photo_url,
-      staffMobile: formData.staff_mobile,
-      staffEmail: formData.staff_email,
-      staffUsername: formData.staff_username,
-      staffPassword: formData.staff_password,
-      staffRole: formData.staff_role,
-      createdDate: new Date().toISOString(),
-      updatedDate: new Date().toISOString(),
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData((prev) => ({ ...prev, photo_url: reader.result }));
     };
+    reader.readAsDataURL(file); // convert image to Base64
+  };
 
-    const res = await fetch("http://localhost:8080/api/staff", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    if (res.ok) {
-      alert("Staff registered successfully.");
-      setFormData({
-        staff_name: '',
-        photo_url: '',
-        staff_mobile: '',
-        staff_email: '',
-        staff_username: '',
-        staff_password: '',
-        staff_role: '',
+    try {
+      const payload = {
+        staffName: formData.staff_name,
+        photoUrl: formData.photo_url,
+        staffMobile: formData.staff_mobile,
+        staffEmail: formData.staff_email,
+        staffUsername: formData.staff_username,
+        staffPassword: formData.staff_password,
+        staffRole: formData.staff_role,
+        createdDate: new Date().toISOString(),
+        updatedDate: new Date().toISOString(),
+      };
+
+      const res = await fetch('http://localhost:8080/api/staff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
-    } else {
-      alert("Failed to register staff.");
+
+      if (res.ok) {
+        alert('Staff registered successfully.');
+        setFormData({
+          staff_name: '',
+          photo_url: '',
+          staff_mobile: '',
+          staff_email: '',
+          staff_username: '',
+          staff_password: '',
+          staff_role: '',
+        });
+      } else {
+        alert('Failed to register staff.');
+      }
+    } catch (error) {
+      alert('Something went wrong.');
     }
-  } catch (error) {
-    alert("Something went wrong.");
-  }
-};
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted p-6">
@@ -85,16 +102,23 @@ const handleSubmit = async (e) => {
               />
             </div>
 
-            {/* Photo URL */}
+            {/* Photo Upload */}
             <div>
-              <Label htmlFor="photo_url">Photo URL (optional)</Label>
+              <Label htmlFor="photo_url">Upload Photo</Label>
               <Input
                 id="photo_url"
                 name="photo_url"
-                placeholder="e.g., http://example.com/image.jpg"
-                value={formData.photo_url}
-                onChange={handleChange}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
               />
+              {formData.photo_url && (
+                <img
+                  src={formData.photo_url}
+                  alt="Preview"
+                  className="mt-2 h-20 rounded"
+                />
+              )}
             </div>
 
             {/* Mobile */}
@@ -173,7 +197,9 @@ const handleSubmit = async (e) => {
               </Select>
             </div>
 
-            <Button type="submit" className="w-full mt-4">Register Staff</Button>
+            <Button type="submit" className="w-full mt-4">
+              Register Staff
+            </Button>
           </form>
         </CardContent>
       </Card>
