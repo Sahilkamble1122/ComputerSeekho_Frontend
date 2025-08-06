@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import Footer from "../footer/components/Footer";
+import Navcomponent from "../home/components/Navcomponent";
 import BatchPlacementCard from "./components/BatchPlacementCard";
+
 export default function PlacementPage() {
   const [batches, setBatches] = useState([]);
 
@@ -26,7 +29,9 @@ export default function PlacementPage() {
     .sort((a, b) => a.year - b.year);
 
   return (
-    <div className="p-6 space-y-12">
+    <>
+    <Navcomponent/>
+    <div className="pt-[150px] p-6 space-y-12">
       {/* DBDA Section */}
       <div>
         <h2 className="text-2xl font-bold text-blue-900 mb-4 text-center">
@@ -67,5 +72,7 @@ export default function PlacementPage() {
         </div>
       </div>
     </div>
+    <Footer/>
+    </>
   );
 }

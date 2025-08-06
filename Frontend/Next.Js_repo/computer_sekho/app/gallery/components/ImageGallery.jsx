@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Skeleton } from "@/components/ui/skeleton";
+
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ImageGallery({ images, loading }) {
   return (

@@ -58,7 +58,7 @@ const recruiters = [
 
 export default function AllRecruitersPage() {
   return (
-    <div className="py-10 px-4 sm:px-10 lg:px-20">
+    <div className="pt-[150px] py-10 px-4 sm:px-10 lg:px-20">
       <h1 className="text-3xl font-bold text-center text-blue-900 mb-10">
         All Major Recruiters
       </h1>
@@ -69,8 +69,8 @@ export default function AllRecruitersPage() {
             key={i}
             src={logo}
             alt={`Recruiter ${i}`}
-            width={160} //180
-            height={80} //100
+            width={160}
+            height={80}
             className="object-contain"
           />
         ))}
@@ -78,3 +78,4 @@ export default function AllRecruitersPage() {
     </div>
   );
 }
+
