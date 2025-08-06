@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { useEffect } from "react";
+
+import { useState, useEffect } from "react";
 
 export default function EnquiryForm() {
   const initialFormState = {
@@ -37,39 +37,33 @@ export default function EnquiryForm() {
 
   useEffect(() => {
     fetchCourses();
-  }, []);
-
-  useEffect(() => {
     fetchBatches();
   }, []);
+
+  const getToken = () => localStorage.getItem("token");
 
   const fetchCourses = async () => {
     setLoading(true);
     setCourseError("");
     try {
-      console.log("🔍 Fetching courses from: http://localhost:8080/api/courses");
-      const res = await fetch("http://localhost:8080/api/courses");
-      
-      console.log("📡 Course API Response Status:", res.status);
-      console.log("📡 Course API Response Headers:", res.headers);
-      
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      
+      const token = getToken();
+      if (!token) throw new Error("Missing authentication token");
+
+      const res = await fetch("http://localhost:8080/api/courses", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
       const data = await res.json();
-      console.log("✅ Courses fetched successfully:", data);
-      console.log("📊 Number of courses:", data.length);
-      
       if (Array.isArray(data)) {
         setCourses(data);
-        console.log("🎯 Course dropdown populated with", data.length, "courses");
       } else {
-        console.error("❌ Courses data is not an array:", data);
         setCourseError("Invalid data format received");
       }
     } catch (error) {
-      console.error("❌ Failed to fetch courses:", error);
       setCourseError(`Failed to fetch courses: ${error.message}`);
     } finally {
       setLoading(false);
@@ -80,29 +74,24 @@ export default function EnquiryForm() {
     setLoading(true);
     setBatchError("");
     try {
-      console.log("🔍 Fetching batches from: http://localhost:8080/api/batches/active");
-      const res = await fetch("http://localhost:8080/api/batches/active");
-      
-      console.log("📡 Batch API Response Status:", res.status);
-      console.log("📡 Batch API Response Headers:", res.headers);
-      
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      
+      const token = getToken();
+      if (!token) throw new Error("Missing authentication token");
+
+      const res = await fetch("http://localhost:8080/api/batches/active", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
       const data = await res.json();
-      console.log("✅ Batches fetched successfully:", data);
-      console.log("📊 Number of batches:", data.length);
-      
       if (Array.isArray(data)) {
         setBatches(data);
-        console.log("🎯 Batch dropdown populated with", data.length, "batches");
       } else {
-        console.error("❌ Batches data is not an array:", data);
         setBatchError("Invalid data format received");
       }
     } catch (error) {
-      console.error("❌ Failed to fetch batches:", error);
       setBatchError(`Failed to fetch batches: ${error.message}`);
     } finally {
       setLoading(false);
@@ -111,74 +100,77 @@ export default function EnquiryForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(`🔄 Form field changed: ${name} = ${value}`);
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const validateForm = () => {
-  const newErrors = {};
+    const newErrors = {};
 
-  if (!form.name.trim()) newErrors.name = "Name is required";
-  if (!form.dob) newErrors.dob = "Date of Birth is required";
-  if (!form.gender) newErrors.gender = "Gender is required";
-  if (!form.resAddress.trim())
-    newErrors.resAddress = "Residential address is required";
-  if (!form.mobile.trim() || !/^\d{10}$/.test(form.mobile))
-    newErrors.mobile = "Valid 10-digit mobile number is required";
-  if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
-    newErrors.email = "Valid email is required";
-  if (!form.qualification.trim())
-    newErrors.qualification = "Qualification is required";
-  if (!form.course.trim()) newErrors.course = "Course is required";
-  if (!form.batchId) newErrors.batchId = "Batch is required";
+    if (!form.name.trim()) newErrors.name = "Name is required";
+    if (!form.dob) newErrors.dob = "Date of Birth is required";
+    if (!form.gender) newErrors.gender = "Gender is required";
+    if (!form.resAddress.trim()) newErrors.resAddress = "Residential address is required";
+    if (!form.mobile.trim() || !/^\d{10}$/.test(form.mobile)) newErrors.mobile = "Valid 10-digit mobile number is required";
+    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) newErrors.email = "Valid email is required";
+    if (!form.qualification.trim()) newErrors.qualification = "Qualification is required";
+    if (!form.course.trim()) newErrors.course = "Course is required";
+    if (!form.batchId) newErrors.batchId = "Batch is required";
 
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log("🚀 Form submission started");
-    console.log("📝 Form data:", form);
-    
-    if (!validateForm()) {
-      alert("❌ Please correct the errors before submitting.");
+  e.preventDefault();
+  if (!validateForm()) {
+    alert("❌ Please correct the errors before submitting.");
+    return;
+  }
+
+  try {
+    const token = getToken();
+    if (!token) {
+      alert("❌ You are not logged in.");
       return;
     }
 
-    try {
-      const formData = new FormData();
-
-      formData.append("studentName", form.name);
-      formData.append("studentAddress", form.resAddress);
-      formData.append("studentGender", form.gender);
-      formData.append("studentDob", form.dob);
-      formData.append("studentQualification", form.qualification);
-      formData.append("studentMobile", form.mobile);
-      formData.append("studentEmail", form.email);
-      formData.append("courseId", form.course);
-      formData.append("studentPassword", "pass123");
-      formData.append("studentUsername", form.email);
-      formData.append("batchId", form.batchId);
-
-      if (form.photo) {
-        formData.append("photo", form.photo);
-      }
-
-      console.log("📤 Submitting to: http://localhost:8080/api/students");
-      const response = await fetch("http://localhost:8080/api/students", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error("Failed to register student");
-
-      alert("✅ Student registered successfully!");
-      setForm(initialFormState);
-      setPreview(null);
-    } catch (error) {
-      alert("❌ Registration failed: " + error.message);
+    const formData = new FormData();
+    formData.append("studentName", form.name);
+    formData.append("studentAddress", form.resAddress);
+    formData.append("studentGender", form.gender);
+    formData.append("studentDob", form.dob);
+    formData.append("studentQualification", form.qualification);
+    formData.append("studentMobile", form.mobile);
+    formData.append("studentEmail", form.email);
+    formData.append("courseId", form.course);
+    formData.append("studentPassword", "pass123");
+    formData.append("studentUsername", form.email);
+    formData.append("batchId", form.batchId);
+    if (form.photo) {
+      formData.append("photo", form.photo);
     }
+
+    const response = await fetch("http://localhost:8080/api/students/form", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Do NOT set Content-Type when using FormData; browser will set it
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Failed to register student");
+    }
+
+    alert("✅ Student registered successfully!");
+    setForm(initialFormState);
+    setPreview(null);
+  } catch (error) {
+    alert("❌ Registration failed: " + error.message);
+  }
+
   };
 
   return (
