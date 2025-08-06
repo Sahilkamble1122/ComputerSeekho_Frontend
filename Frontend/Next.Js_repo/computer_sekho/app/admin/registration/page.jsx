@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useEffect } from "react";
 
 export default function EnquiryForm() {
   const initialFormState = {
@@ -21,92 +22,163 @@ export default function EnquiryForm() {
     chequeNo: "",
     bankName: "",
     paymentDate: "",
-    photo: "",
+    photo: null,
+    batchId: "",
   };
 
   const [form, setForm] = useState(initialFormState);
   const [errors, setErrors] = useState({});
+  const [preview, setPreview] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [courseError, setCourseError] = useState("");
+  const [batchError, setBatchError] = useState("");
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  useEffect(() => {
+    fetchBatches();
+  }, []);
+
+  const fetchCourses = async () => {
+    setLoading(true);
+    setCourseError("");
+    try {
+      console.log("🔍 Fetching courses from: http://localhost:8080/api/courses");
+      const res = await fetch("http://localhost:8080/api/courses");
+      
+      console.log("📡 Course API Response Status:", res.status);
+      console.log("📡 Course API Response Headers:", res.headers);
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
+      const data = await res.json();
+      console.log("✅ Courses fetched successfully:", data);
+      console.log("📊 Number of courses:", data.length);
+      
+      if (Array.isArray(data)) {
+        setCourses(data);
+        console.log("🎯 Course dropdown populated with", data.length, "courses");
+      } else {
+        console.error("❌ Courses data is not an array:", data);
+        setCourseError("Invalid data format received");
+      }
+    } catch (error) {
+      console.error("❌ Failed to fetch courses:", error);
+      setCourseError(`Failed to fetch courses: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchBatches = async () => {
+    setLoading(true);
+    setBatchError("");
+    try {
+      console.log("🔍 Fetching batches from: http://localhost:8080/api/batches/active");
+      const res = await fetch("http://localhost:8080/api/batches/active");
+      
+      console.log("📡 Batch API Response Status:", res.status);
+      console.log("📡 Batch API Response Headers:", res.headers);
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
+      const data = await res.json();
+      console.log("✅ Batches fetched successfully:", data);
+      console.log("📊 Number of batches:", data.length);
+      
+      if (Array.isArray(data)) {
+        setBatches(data);
+        console.log("🎯 Batch dropdown populated with", data.length, "batches");
+      } else {
+        console.error("❌ Batches data is not an array:", data);
+        setBatchError("Invalid data format received");
+      }
+    } catch (error) {
+      console.error("❌ Failed to fetch batches:", error);
+      setBatchError(`Failed to fetch batches: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log(`🔄 Form field changed: ${name} = ${value}`);
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const validateForm = () => {
-    const newErrors = {};
-    if (!form.name.trim()) newErrors.name = "Name is required";
-    if (!form.dob) newErrors.dob = "Date of Birth is required";
-    if (!form.gender) newErrors.gender = "Gender is required";
-    if (!form.resAddress.trim())
-      newErrors.resAddress = "Residential address is required";
-    if (!form.mobile.trim() || !/^\d{10}$/.test(form.mobile))
-      newErrors.mobile = "Valid 10-digit mobile number is required";
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
-      newErrors.email = "Valid email is required";
-    if (!form.qualification.trim())
-      newErrors.qualification = "Qualification is required";
-    if (!form.course.trim()) newErrors.course = "Course is required";
-    if (!form.startDate) newErrors.startDate = "Start date is required";
-    if (!form.time) newErrors.time = "Class time is required";
-    if (!form.paymentMode) newErrors.paymentMode = "Payment mode is required";
-    if (!form.amount || form.amount <= 0)
-      newErrors.amount = "Amount must be greater than 0";
-    if (
-      (form.paymentMode === "Cheque" || form.paymentMode === "DD") &&
-      !form.chequeNo.trim()
-    )
-      newErrors.chequeNo = "Cheque/DD No. is required";
-    if (
-      (form.paymentMode === "Cheque" || form.paymentMode === "DD") &&
-      !form.bankName.trim()
-    )
-      newErrors.bankName = "Bank name is required";
-    if (
-      (form.paymentMode === "Cheque" || form.paymentMode === "DD") &&
-      !form.paymentDate
-    )
-      newErrors.paymentDate = "Payment date is required";
+  const newErrors = {};
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  if (!form.name.trim()) newErrors.name = "Name is required";
+  if (!form.dob) newErrors.dob = "Date of Birth is required";
+  if (!form.gender) newErrors.gender = "Gender is required";
+  if (!form.resAddress.trim())
+    newErrors.resAddress = "Residential address is required";
+  if (!form.mobile.trim() || !/^\d{10}$/.test(form.mobile))
+    newErrors.mobile = "Valid 10-digit mobile number is required";
+  if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
+    newErrors.email = "Valid email is required";
+  if (!form.qualification.trim())
+    newErrors.qualification = "Qualification is required";
+  if (!form.course.trim()) newErrors.course = "Course is required";
+  if (!form.batchId) newErrors.batchId = "Batch is required";
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("🚀 Form submission started");
+    console.log("📝 Form data:", form);
+    
     if (!validateForm()) {
       alert("❌ Please correct the errors before submitting.");
       return;
     }
 
     try {
-  const response = await fetch("http://localhost:8080/api/students", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      studentName: form.name,
-      studentAddress: form.resAddress,
-      studentGender: form.gender,
-      photoUrl: form.photo,
-      studentDob: `${form.dob}T00:00:00`,
-      studentQualification: form.qualification ,
-      studentMobile: form.mobile,
-      studentEmail: form.email,
-      courseId: form.course,
-      studentPassword: "pass123",
-      studentUsername: form.email,
-    }),
-  });
+      const formData = new FormData();
 
-  if (!response.ok) throw new Error("Failed to register student");
+      formData.append("studentName", form.name);
+      formData.append("studentAddress", form.resAddress);
+      formData.append("studentGender", form.gender);
+      formData.append("studentDob", form.dob);
+      formData.append("studentQualification", form.qualification);
+      formData.append("studentMobile", form.mobile);
+      formData.append("studentEmail", form.email);
+      formData.append("courseId", form.course);
+      formData.append("studentPassword", "pass123");
+      formData.append("studentUsername", form.email);
+      formData.append("batchId", form.batchId);
 
-  alert("✅ Student registered successfully!");
-  setForm(initialFormState);
-} catch (error) {
-  alert("❌ Registration failed: " + error.message);
-}
+      if (form.photo) {
+        formData.append("photo", form.photo);
+      }
 
+      console.log("📤 Submitting to: http://localhost:8080/api/students");
+      const response = await fetch("http://localhost:8080/api/students", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Failed to register student");
+
+      alert("✅ Student registered successfully!");
+      setForm(initialFormState);
+      setPreview(null);
+    } catch (error) {
+      alert("❌ Registration failed: " + error.message);
+    }
   };
 
   return (
@@ -118,6 +190,8 @@ export default function EnquiryForm() {
         </h2>
         <div className="w-20" />
       </div>
+
+     
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
@@ -180,9 +254,9 @@ export default function EnquiryForm() {
               Student Photo
             </label>
             <div className="w-24 h-24 border rounded bg-white flex items-center justify-center overflow-hidden">
-              {form.photo ? (
+              {preview ? (
                 <img
-                  src={form.photo}
+                  src={preview}
                   alt="Preview"
                   className="object-cover w-full h-full"
                 />
@@ -200,9 +274,9 @@ export default function EnquiryForm() {
                 onChange={(e) => {
                   const file = e.target.files[0];
                   if (file) {
+                    setForm((prev) => ({ ...prev, photo: file }));
                     const reader = new FileReader();
-                    reader.onload = () =>
-                      setForm((prev) => ({ ...prev, photo: reader.result }));
+                    reader.onloadend = () => setPreview(reader.result);
                     reader.readAsDataURL(file);
                   }
                 }}
@@ -223,7 +297,7 @@ export default function EnquiryForm() {
           <p className="text-red-600 text-sm">{errors.resAddress}</p>
         )}
 
-        <label className="block font-semibold">Office Address:</label>
+        <label className="block font-semibold">Official Address:</label>
         <textarea
           name="officeAddress"
           value={form.officeAddress}
@@ -232,7 +306,7 @@ export default function EnquiryForm() {
         />
 
         <div className="flex items-center flex-wrap gap-4 text-sm mt-4">
-          <label className="font-semibold">Phone (R):</label>
+          <label className="font-semibold">Phone:</label>
           <input
             type="tel"
             name="phoneR"
@@ -242,7 +316,7 @@ export default function EnquiryForm() {
             pattern="[0-9]{6,12}"
           />
 
-          <label className="font-semibold">Phone (O):</label>
+          <label className="font-semibold">Secondary Phone :</label>
           <input
             type="tel"
             name="phoneO"
@@ -297,129 +371,58 @@ export default function EnquiryForm() {
           <label className="block font-semibold mb-1">
             Course Enrolled For:
           </label>
-          <input
-            type="text"
+          <select
             name="course"
             value={form.course}
             onChange={handleChange}
             className="input"
-          />
+            disabled={loading}
+          >
+            <option value="">-- Select Course --</option>
+            {courses.map((course) => (
+              <option key={course.courseId} value={course.courseId}>
+                {course.courseId} - {course.courseName}
+              </option>
+            ))}
+          </select>
           {errors.course && (
             <p className="text-red-600 text-sm">{errors.course}</p>
           )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block font-semibold mb-1">Start Date:</label>
-            <input
-              type="date"
-              name="startDate"
-              value={form.startDate}
-              onChange={handleChange}
-              className="input"
-            />
-            {errors.startDate && (
-              <p className="text-red-600 text-sm">{errors.startDate}</p>
-            )}
-          </div>
-          <div>
-            <label className="block font-semibold mb-1">Class Time:</label>
-            <input
-              type="time"
-              name="time"
-              value={form.time}
-              onChange={handleChange}
-              className="input"
-            />
-            {errors.time && (
-              <p className="text-red-600 text-sm">{errors.time}</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <label className="block font-semibold">Payment Mode:</label>
-          <div className="flex gap-4 mt-1">
-            {["Cash", "Cheque", "DD"].map((mode) => (
-              <label key={mode}>
-                <input
-                  type="radio"
-                  name="paymentMode"
-                  value={mode}
-                  checked={form.paymentMode === mode}
-                  onChange={handleChange}
-                />{" "}
-                {mode}
-              </label>
-            ))}
-          </div>
-          {errors.paymentMode && (
-            <p className="text-red-600 text-sm">{errors.paymentMode}</p>
+          {courseError && (
+            <p className="text-red-600 text-sm">{courseError}</p>
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <input
-              type="number"
-              name="amount"
-              value={form.amount}
-              onChange={handleChange}
-              placeholder="Amount"
-              className="input"
-            />
-            {errors.amount && (
-              <p className="text-red-600 text-sm">{errors.amount}</p>
-            )}
-          </div>
-          <div>
-            <input
-              type="text"
-              name="chequeNo"
-              value={form.chequeNo}
-              onChange={handleChange}
-              placeholder="Cheque/DD No."
-              className="input"
-            />
-            {errors.chequeNo && (
-              <p className="text-red-600 text-sm">{errors.chequeNo}</p>
-            )}
-          </div>
-          <div>
-            <input
-              type="text"
-              name="bankName"
-              value={form.bankName}
-              onChange={handleChange}
-              placeholder="Bank Name"
-              className="input"
-            />
-            {errors.bankName && (
-              <p className="text-red-600 text-sm">{errors.bankName}</p>
-            )}
-          </div>
-        </div>
-
         <div>
-          <label className="block font-semibold mb-1">Payment Date:</label>
-          <input
-            type="date"
-            name="paymentDate"
-            value={form.paymentDate}
+          <label className="block font-semibold mb-1">Batch Name:</label>
+          <select
+            name="batchId"
+            value={form.batchId}
             onChange={handleChange}
             className="input"
-          />
-          {errors.paymentDate && (
-            <p className="text-red-600 text-sm">{errors.paymentDate}</p>
+            disabled={loading}
+          >
+            <option value="">-- Select Batch --</option>
+            {batches.map((batch) => (
+              <option key={batch.batchId} value={batch.batchId}>
+                {batch.batchId} - {batch.batchName}
+              </option>
+            ))}
+          </select>
+          {errors.batchId && (
+            <p className="text-red-600 text-sm">{errors.batchId}</p>
+          )}
+          {batchError && (
+            <p className="text-red-600 text-sm">{batchError}</p>
           )}
         </div>
 
         <button
           type="submit"
           className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+          disabled={loading}
         >
-          Submit
+          {loading ? "Loading..." : "Submit"}
         </button>
       </form>
     </div>
