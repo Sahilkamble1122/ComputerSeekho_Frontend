@@ -20,38 +20,9 @@ export default function EnquiryForm() {
     setValue
   } = useForm();
 
-  // Auto-login and fetch admin info
-  useEffect(() => {
-    const loginAndFetchAdmin = async () => {
-      try {
-        // Replace with your actual credentials (for demo/dev only)
-        const loginResponse = await fetch('http://localhost:8080/api/enquiries', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ username: 'admin', password: 'admin123' }),
-        });
+  
+  setCurrentAdmin(localStorage.getItem("loginName") || ""); // Get admin name from localStorage
 
-        if (!loginResponse.ok) {
-          toast.error("Login failed.");
-          return;
-        }
-
-        const meResponse = await fetch("/api/auth/me");
-        if (meResponse.ok) {
-          const user = await meResponse.json();
-          setCurrentAdmin(user.name);
-        } else {
-          toast.error("Failed to fetch user.");
-        }
-      } catch (error) {
-        toast.error("Auth error.");
-      }
-    };
-
-    loginAndFetchAdmin();
-  }, []);
 
   // Set staff field once admin is fetched
   useEffect(() => {
@@ -62,7 +33,7 @@ export default function EnquiryForm() {
 
   const onSubmit = async (data) => {
     try {
-      const res = await fetch("/api/enquiry", {
+      const res = await fetch("http://localhost:8080/api/enquiries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
