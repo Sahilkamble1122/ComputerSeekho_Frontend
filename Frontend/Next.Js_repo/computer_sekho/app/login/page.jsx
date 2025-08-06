@@ -36,7 +36,9 @@ export default function LoginPage() {
       // Save token to localStorage
       localStorage.setItem('token', data.token);
       // Optionally, save admin info to localStorage
-      localStorage.setItem('admin', data.username);
+      localStorage.setItem('admin', data.loginName);
+
+      localStorage.setItem('img_path', data.img_path);
 
       // Redirect to dashboard or another page
       router.push('/admin');

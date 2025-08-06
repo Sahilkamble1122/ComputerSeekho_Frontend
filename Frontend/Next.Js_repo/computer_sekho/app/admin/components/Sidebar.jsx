@@ -27,6 +27,25 @@ export default function Sidebar({ admin }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
+   const [adminName, setAdminName] = useState('');
+   const [imgPath, setImgPath] = useState('');
+
+  useEffect(() => {
+    const storedAdmin = localStorage.getItem('admin');
+    const img_path = localStorage.getItem("img_path");
+    if (storedAdmin) {
+      try {
+          setImgPath(img_path);
+        setAdminName(storedAdmin); // assuming { "name": "Kirti Tiwari" }
+      } catch (error) {
+        console.error('Invalid admin JSON in localStorage');
+      }
+    }
+  }, []);
+
+
+
+
   useEffect(() => {
     const handleResize = () => {
       setCollapsed(window.innerWidth < 768);
@@ -53,12 +72,15 @@ export default function Sidebar({ admin }) {
       {/* Admin Info */}
       <div className="flex flex-col items-center mb-8 mt-4">
         <img
-          src={admin?.photo || '/default-profile.png'}
+          src={imgPath || '/default-profile.png'}
           alt="Admin"
           className="w-12 h-12 rounded-full border mb-2"
         />
+
+      
         {!collapsed && (
-          <p className="text-sm font-medium text-center">{admin?.name || 'Admin Name'}</p>
+          
+          <p className="text-sm font-medium text-center">{adminName  || 'Admin Name111'}</p>
         )}
       </div>
 

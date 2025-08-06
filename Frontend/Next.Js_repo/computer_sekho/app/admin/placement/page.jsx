@@ -12,7 +12,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-
 export default function ManagePlacementsPage() {
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
@@ -125,11 +124,11 @@ export default function ManagePlacementsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Course</TableHead>
-                <TableHead>Batch</TableHead>
-                <TableHead>Placed</TableHead>
+                <TableHead className="font-bold">Name</TableHead>
+                <TableHead className="font-bold">Contact</TableHead>
+                <TableHead className="font-bold">Course</TableHead>
+                <TableHead className="font-bold">Batch</TableHead>
+                <TableHead className="font-bold">Placed</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
