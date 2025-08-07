@@ -125,10 +125,11 @@
 // }
 "use client";
 
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import Navcomponent from "../home/components/Navcomponent";
 import Footer from "../footer/components/Footer";
+import Navcomponent from "../home/components/Navcomponent";
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState([]);
@@ -185,11 +186,12 @@ export default function CoursesPage() {
                 <img
                   src={course.coverPhoto}
                   alt={course.courseName || "Course Cover"}
+               
                   className="absolute inset-0 w-full h-full object-cover"
                 />
 
                 {/* Overlay with content */}
-                <div className="absolute inset-0 bg-black/60 flex flex-col justify-center items-center text-white text-center px-6">
+                <div className="absolute inset-0 bg-gray-500 flex flex-col justify-center items-center text-white text-center px-6">
                   <h2 className="text-3xl font-bold mb-2 drop-shadow-lg">
                     {course.courseName}
                   </h2>
@@ -198,7 +200,7 @@ export default function CoursesPage() {
                   </p>
                   <Link
                     href={`/courses/${course.courseId}`}
-                    className="bg-white text-red-600 font-semibold py-2 px-6 rounded-full hover:bg-red-600 hover:text-white transition drop-shadow-lg"
+                    className="bg-white text-blue-600 font-semibold py-2 px-6 rounded-full hover:bg-red-600 hover:text-white transition drop-shadow-lg"
                   >
                     Read More
                   </Link>
