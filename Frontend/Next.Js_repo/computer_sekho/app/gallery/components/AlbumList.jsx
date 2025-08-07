@@ -52,7 +52,7 @@ export default function AlbumList() {
               id={album.albumId}
               title={album.albumName}
               description={album.albumDescription}
-              coverImage={album.coverImage}
+              coverImage={album?.coverImage}
             />
           ))
         ) : (

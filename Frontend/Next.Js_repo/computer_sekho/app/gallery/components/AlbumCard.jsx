@@ -2,16 +2,16 @@
 // app/gallery/components/AlbumCard.jsx
 "use client";
 
-import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { useState } from "react";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function AlbumCard({ id, title, description, coverImage }) {
   const router = useRouter();
