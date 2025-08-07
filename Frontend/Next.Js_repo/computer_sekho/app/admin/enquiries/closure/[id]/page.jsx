@@ -15,33 +15,60 @@ const closeSchema = z.object({
   status: z.enum(["success", "closed"], {
     required_error: "Status is required"
   }),
-  closing_remarks: z.string().min(5, "Please enter at least 5 characters")
+  closureReason: z.string().min(1, "Closure reason is required"),
+  otherReason: z.string().optional(),
 });
 
 export default function CloseEnquiryPage() {
   const { id } = useParams();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [closureReasons, setClosureReasons] = useState([]);
+  const [selectedReason, setSelectedReason] = useState('');
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors }
   } = useForm({
     resolver: zodResolver(closeSchema),
     defaultValues: {
       status: "success",
-      closing_remarks: ""
+      closureReason: "",
+      otherReason: ""
     }
   });
+
+  const watchReason = watch("closureReason");
+
+  useEffect(() => {
+    fetchClosureReasons();
+  }, []);
+
+  const fetchClosureReasons = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/closure-reasons");
+      if (!res.ok) throw new Error("Failed to fetch closure reasons");
+      const data = await res.json();
+      setClosureReasons([...data, { reason: "Other" }]);
+    } catch (err) {
+      toast.error("Error loading closure reasons");
+    }
+  };
 
   const onSubmit = async (values) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/enquiry/${id}/close`, {
+      const finalRemarks = values.closureReason === 'Other' ? values.otherReason : values.closureReason;
+
+      const res = await fetch(`http://localhost:8080/api/enquiry/${id}/close`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values)
+        body: JSON.stringify({
+          status: values.status,
+          closingRemarks: finalRemarks
+        })
       });
 
       if (!res.ok) throw new Error("Failed to close enquiry");
@@ -62,8 +89,7 @@ export default function CloseEnquiryPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label className="block mb-1 font-medium">Status</label>
-          <select {...register("status")}
-                  className="w-full border px-3 py-2 rounded-md">
+          <select {...register("status")} className="w-full border px-3 py-2 rounded-md">
             <option value="success">Success</option>
             <option value="closed">Closed</option>
           </select>
@@ -71,12 +97,25 @@ export default function CloseEnquiryPage() {
         </div>
 
         <div>
-          <label className="block mb-1 font-medium">Closing Remarks</label>
-          <Textarea {...register("closing_remarks")}
-                    placeholder="Write reason or closing remarks..."
-                    className="w-full min-h-[100px]" />
-          {errors.closing_remarks && <p className="text-red-500 text-sm mt-1">{errors.closing_remarks.message}</p>}
+          <label className="block mb-1 font-medium">Closure Reason</label>
+          <select {...register("closureReason")}
+                  className="w-full border px-3 py-2 rounded-md">
+            <option value="">Select reason</option>
+            {closureReasons.map((r, index) => (
+              <option key={index} value={r.closureReasonId}>{r.reason}</option>
+            ))}
+          </select>
+          {errors.closureReason && <p className="text-red-500 text-sm mt-1">{errors.closureReason.message}</p>}
         </div>
+
+        {watchReason === 'Other' && (
+          <div>
+            <label className="block mb-1 font-medium">Specify Other Reason</label>
+            <Input {...register("otherReason")}
+                   placeholder="Type reason here..."
+                   className="w-full" />
+          </div>
+        )}
 
         <Button type="submit" disabled={loading}>
           {loading ? "Submitting..." : "Close Enquiry"}
