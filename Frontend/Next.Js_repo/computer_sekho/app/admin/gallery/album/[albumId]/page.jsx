@@ -20,7 +20,7 @@ export default function AlbumImagesPage() {
     try {
       const res = await fetch(`/api/images?albumId=${albumId}`);
       const data = await res.json();
-      const coverFirst = [...data].sort((a, b) => b.is_cover - a.is_cover);
+      const coverFirst = [...data].sort((a, b) => b.isAlbumCover - a.isAlbumCover);
       setImages(coverFirst);
     } catch (err) {
       console.error(err);
@@ -65,24 +65,24 @@ export default function AlbumImagesPage() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {images.map((img) => (
-            <div key={img.image_id} className="relative border p-2 rounded shadow-sm">
+            <div key={img.imageId} className="relative border p-2 rounded shadow-sm">
               <Image
-                src={img.image_path}
+                src={img.imagePath}
                 alt="album image"
                 width={400}
                 height={300}
                 className="rounded w-full h-auto object-cover"
               />
-              {img.is_cover && (
+              {img.isAlbumCover && (
                 <span className="absolute top-2 left-2 bg-yellow-400 text-xs px-2 py-0.5 rounded">
                   Cover
                 </span>
               )}
               <div className="mt-2 flex flex-col gap-2">
-                <Button size="sm" variant="outline" onClick={() => handleSetCover(img.image_id)}>
+                <Button size="sm" variant="outline" onClick={() => handleSetCover(img.imageId)}>
                   Set as Cover
                 </Button>
-                <Button size="sm" variant="destructive" onClick={() => handleDeleteImage(img.image_id)}>
+                <Button size="sm" variant="destructive" onClick={() => handleDeleteImage(img.imageId)}>
                   Delete
                 </Button>
               </div>

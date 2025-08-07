@@ -53,45 +53,45 @@ export default function AddAlbum() {
   };
 
   const handleCreateAlbum = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!albumName || !startDate || !endDate) {
-    return toast.error("Please fill in all required fields");
-  }
+    if (!albumName || !startDate || !endDate) {
+      return toast.error("Please fill in all required fields");
+    }
 
-  if (new Date(startDate) > new Date(endDate)) {
-    return toast.error("Start date cannot be after end date");
-  }
+    if (new Date(startDate) > new Date(endDate)) {
+      return toast.error("Start date cannot be after end date");
+    }
 
-  try {
-    const res = await fetch("http://localhost:8080/api/albums", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        albumName: albumName,
-        albumDescription: description,
-         startDate: `${startDate}T00:00:00`,
-  endDate: `${endDate}T00:00:00`,
-        albumIsActive: isActive,
-      }),
-    });
+    try {
+      const res = await fetch("http://localhost:8080/api/albums", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          albumName: albumName,
+          albumDescription: description,
+          startDate: `${startDate}T00:00:00`,
+          endDate: `${endDate}T00:00:00`,
+          albumIsActive: isActive,
+        }),
+      });
 
-    if (!res.ok) throw new Error("Album creation failed");
-    toast.success("Album created successfully");
+      if (!res.ok) throw new Error("Album creation failed");
+      toast.success("Album created successfully");
 
-    setAlbumName("");
-    setDescription("");
-    setStartDate("");
-    setEndDate("");
-    setIsActive(true);
-    fetchAlbums();
-  } catch (err) {
-    console.error(err);
-    toast.error("Album creation failed");
-  }
-};
+      setAlbumName("");
+      setDescription("");
+      setStartDate("");
+      setEndDate("");
+      setIsActive(true);
+      fetchAlbums();
+    } catch (err) {
+      console.error(err);
+      toast.error("Album creation failed");
+    }
+  };
   const handleAddImages = async (e) => {
     e.preventDefault();
     if (!selectedAlbumId || imageFiles.length === 0) {
@@ -104,11 +104,11 @@ export default function AddAlbum() {
     imageFiles.forEach((file, index) => {
       formData.append("images", file);
       // ✅ Set cover flag for the selected image index only
-      formData.append(`is_cover_${index}`, index === coverImageIndex);
+      formData.append(`isAlbumCover${index}`, index === coverImageIndex);
     });
 
     try {
-      const res = await fetch("/api/images", {
+      const res = await fetch("http://localhost:8080/api/images", {
         method: "POST", // ✅ Upload multiple images
         body: formData,
       });
@@ -134,40 +134,67 @@ export default function AddAlbum() {
           <TabsTrigger value="images">Add Images</TabsTrigger>
         </TabsList>
 
-       <TabsContent value="view">
-  <h3 className="text-lg font-semibold mb-4">Existing Albums</h3>
-  <ul className="space-y-2">
-    {albums.map((album) => (
-      <li key={album.albumId} className="flex items-center justify-between px-4 py-2 border rounded hover:bg-gray-50">
-        <span>{album.albumName}</span>
-        <Button variant="destructive" size="sm" onClick={() => handleDeleteAlbum(album.albumId)}>
-          Delete
-        </Button>
-      </li>
-    ))}
-  </ul>
-</TabsContent>
+        <TabsContent value="view">
+          <h3 className="text-lg font-semibold mb-4">Existing Albums</h3>
+          <ul className="space-y-2">
+            {albums.map((album) => (
+              <li
+                key={album.albumId}
+                className="flex items-center justify-between px-4 py-2 border rounded hover:bg-gray-50"
+              >
+                <span>{album.albumName}</span>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDeleteAlbum(album.albumId)}
+                >
+                  Delete
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </TabsContent>
 
         <TabsContent value="album">
           <form onSubmit={handleCreateAlbum} className="space-y-4">
             <div>
               <Label>Album Name</Label>
-              <Input value={albumName} onChange={(e) => setAlbumName(e.target.value)} required />
+              <Input
+                value={albumName}
+                onChange={(e) => setAlbumName(e.target.value)}
+                required
+              />
             </div>
             <div>
               <Label>Description</Label>
-              <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+              <Input
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
             </div>
             <div>
               <Label>Start Date</Label>
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
+              />
             </div>
             <div>
               <Label>End Date</Label>
-              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                required
+              />
             </div>
             <div className="flex items-center gap-2">
-              <Checkbox checked={isActive} onCheckedChange={() => setIsActive(!isActive)} />
+              <Checkbox
+                checked={isActive}
+                onCheckedChange={() => setIsActive(!isActive)}
+              />
               <Label>Active</Label>
             </div>
             <Button type="submit">Create Album</Button>
@@ -175,21 +202,21 @@ export default function AddAlbum() {
         </TabsContent>
 
         <TabsContent value="images">
-  <form onSubmit={handleAddImages} className="space-y-4">
-    <Label>Select Album</Label>
-    <select
-      value={selectedAlbumId}
-      onChange={(e) => setSelectedAlbumId(e.target.value)}
-      className="w-full p-2 border rounded"
-      required
-    >
-      <option value="">Select</option>
-      {albums.map((a) => (
-        <option key={a.albumId} value={a.albumId}>
-          {a.albumName}
-        </option>
-      ))}
-    </select>
+          <form onSubmit={handleAddImages} className="space-y-4">
+            <Label>Select Album</Label>
+            <select
+              value={selectedAlbumId}
+              onChange={(e) => setSelectedAlbumId(e.target.value)}
+              className="w-full p-2 border rounded"
+              required
+            >
+              <option value="">Select</option>
+              {albums.map((a) => (
+                <option key={a.albumId} value={a.albumId}>
+                  {a.albumName}
+                </option>
+              ))}
+            </select>
 
             <Label>Upload Images</Label>
             <Input
