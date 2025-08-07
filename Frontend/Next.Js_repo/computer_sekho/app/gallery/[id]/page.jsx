@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link"; 
+import Link from "next/link";
 import { Button } from "../../../components/ui/button";
 import ImageGallery from "../components/ImageGallery";
+import Navcomponent from "@/app/home/components/Navcomponent";
+import Footer from "@/app/footer/components/Footer";
 
 export default function AlbumDetailsPage() {
   const { id } = useParams();
@@ -44,30 +46,34 @@ export default function AlbumDetailsPage() {
   const prevPage = () => setPage((p) => Math.max(1, p - 1));
 
   return (
-    <div className="p-6">
-      <Link
-        href="/gallery"
-        className="text-blue-600 hover:text-blue-800 font-medium text-sm mb-4 inline-block"
-      >
-        ← Back to Gallery
-      </Link>
+    <>
+      <Navcomponent />
+      <div className="p-6 pt-[150px]">
+        <Link
+          href="/gallery"
+          className="text-blue-600 hover:text-blue-800 font-medium text-sm mb-4 inline-block"
+        >
+          ← Back to Gallery
+        </Link>
 
-      <h1 className="text-2xl font-bold text-blue-900 mb-6 text-center">
-        {albumTitle}
-      </h1>
+        <h1 className="text-2xl font-bold text-blue-900 mb-6 text-center">
+          {albumTitle}
+        </h1>
 
-      {/* ✅ Using reusable ImageGallery */}
-      <ImageGallery images={images} loading={loading} />
+        {/* ✅ Using reusable ImageGallery */}
+        <ImageGallery images={images} loading={loading} />
 
-      {/* Pagination Controls */}
-      <div className="flex justify-center gap-4 mt-6">
-        <Button variant="outline" disabled={page === 1} onClick={prevPage}>
-          Previous
-        </Button>
-        <Button variant="outline" disabled={!hasMore} onClick={nextPage}>
-          Next
-        </Button>
+        {/* Pagination Controls */}
+        <div className="flex justify-center gap-4 mt-6">
+          <Button variant="outline" disabled={page === 1} onClick={prevPage}>
+            Previous
+          </Button>
+          <Button variant="outline" disabled={!hasMore} onClick={nextPage}>
+            Next
+          </Button>
+        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }

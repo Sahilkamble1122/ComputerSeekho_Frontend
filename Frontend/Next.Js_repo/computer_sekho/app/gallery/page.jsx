@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -6,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import AlbumCard from "./components/AlbumCard";
 import Pagination from "./components/Pagination";
+import Navcomponent from "../home/components/Navcomponent";
+import Footer from "../footer/components/Footer";
 
 export default function GalleryPage() {
   const router = useRouter();
@@ -45,37 +46,41 @@ export default function GalleryPage() {
   const prevPage = () => setPage((p) => Math.max(1, p - 1));
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold text-blue-900 text-center mb-8">
-        Photo Gallery
-      </h1>
+    <>
+      <Navcomponent />
+      <div className="p-6 pt-[150px]">
+        <h1 className="text-3xl font-bold text-blue-900 text-center mb-8">
+          Photo Gallery
+        </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {loading ? (
-          Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-52 w-full rounded-lg" />
-          ))
-        ) : albums.length > 0 ? (
-          albums.map((album) => (
-            <AlbumCard
-              key={album.albumId}
-              album={album}
-              onClick={() => router.push(`/gallery/${album.albumId}`)}
-            />
-          ))
-        ) : (
-          <p className="text-gray-500 text-center col-span-full">
-            No albums found.
-          </p>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {loading ? (
+            Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-52 w-full rounded-lg" />
+            ))
+          ) : albums.length > 0 ? (
+            albums.map((album) => (
+              <AlbumCard
+                key={album.albumId}
+                album={album}
+                onClick={() => router.push(`/gallery/${album.albumId}`)}
+              />
+            ))
+          ) : (
+            <p className="text-gray-500 text-center col-span-full">
+              No albums found.
+            </p>
+          )}
+        </div>
+
+        <Pagination
+          page={page}
+          hasMore={hasMore}
+          onPrev={prevPage}
+          onNext={nextPage}
+        />
       </div>
-
-      <Pagination
-        page={page}
-        hasMore={hasMore}
-        onPrev={prevPage}
-        onNext={nextPage}
-      />
-    </div>
+      <Footer />
+    </>
   );
 }
