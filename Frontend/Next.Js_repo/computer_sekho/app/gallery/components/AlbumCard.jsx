@@ -1,5 +1,4 @@
 // app/gallery/components/AlbumCard.jsx
-// app/gallery/components/AlbumCard.jsx
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
