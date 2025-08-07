@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function AdminDashboard({ adminName }) {
   const [enquiries, setEnquiries] = useState([]);
@@ -13,10 +13,16 @@ export default function AdminDashboard({ adminName }) {
   useEffect(() => {
     const fetchEnquiries = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/enquiries');
-        if (!res.ok) throw new Error('Failed to fetch enquiries');
+        const res = await fetch("http://localhost:8080/api/enquiries");
+        if (!res.ok) throw new Error("Failed to fetch enquiries");
         const data = await res.json();
-        setEnquiries(data);
+
+        // 🔍 Filter only enquiries where enquiryProcessedFlag === false
+        const unprocessedEnquiries = data.filter(
+          (enq) => enq.enquiryProcessedFlag === false
+        );
+
+        setEnquiries(unprocessedEnquiries);
       } catch (error) {
         console.error(error);
       }
@@ -78,7 +84,10 @@ export default function AdminDashboard({ adminName }) {
                 </tr>
               ) : (
                 currentItems.map((enquiry) => (
-                  <tr key={enquiry.enquiryId} className="border-t hover:bg-gray-50">
+                  <tr
+                    key={enquiry.enquiryId}
+                    className="border-t hover:bg-gray-50"
+                  >
                     <td className="p-2 border">{enquiry.enquiryId}</td>
                     <td className="p-2 border">{enquiry.enquirerName}</td>
                     <td className="p-2 border">{enquiry.studentName}</td>
@@ -115,12 +124,11 @@ export default function AdminDashboard({ adminName }) {
             </Button>
           </div>
 
-          
           <div className="text-center text-gray-500 mt-2 text-sm">
-            Showing {indexOfFirstItem + 1} -{' '}
-            {Math.min(indexOfLastItem, sortedData.length)} of {sortedData.length}
+            Showing {indexOfFirstItem + 1} -{" "}
+            {Math.min(indexOfLastItem, sortedData.length)} of{" "}
+            {sortedData.length}
           </div>
-          
         </CardContent>
       </Card>
     </div>
