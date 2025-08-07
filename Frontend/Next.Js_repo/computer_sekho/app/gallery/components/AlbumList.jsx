@@ -17,7 +17,7 @@ export default function AlbumList() {
     const fetchAlbums = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/albums?page=${page}&limit=8`); // 🔁 Update API endpoint
+        const res = await fetch(`http://localhost:8080/api/albums?page=${page}&limit=8`); // 🔁 Update API endpoint
         const data = await res.json();
 
         if (data?.albums?.length > 0) {
@@ -48,10 +48,10 @@ export default function AlbumList() {
         ) : albums.length > 0 ? (
           albums.map((album) => (
             <AlbumCard
-              key={album.id}
-              id={album.id}
-              title={album.title}
-              description={album.description}
+              key={album.albumId}
+              id={album.albumId}
+              title={album.albumName}
+              description={album.albumDescription}
               coverImage={album.coverImage}
             />
           ))

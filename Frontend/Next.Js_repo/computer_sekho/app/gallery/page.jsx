@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,12 +18,14 @@ export default function GalleryPage() {
     const fetchAlbums = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/albums?page=${page}&limit=8`); // 🔁 Replace with actual API
+        const res = await fetch(
+          `http://localhost:8080/api/albums?page=${page}&limit=8`
+        );
         const data = await res.json();
 
-        if (data?.albums?.length > 0) {
-          setAlbums(data.albums);
-          setHasMore(data.albums.length === 8);
+        if (Array.isArray(data) && data.length > 0) {
+          setAlbums(data); // ✅ FIXED HERE
+          setHasMore(data.length === 8);
         } else {
           setAlbums([]);
           setHasMore(false);
@@ -48,19 +51,23 @@ export default function GalleryPage() {
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {loading
-          ? Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-52 w-full rounded-lg" />
-            ))
-          : albums.length > 0
-          ? albums.map((album) => (
-              <AlbumCard
-                key={album.id}
-                album={album}
-                onClick={() => router.push(`/gallery/${album.id}`)}
-              />
-            ))
-          : <p className="text-gray-500 text-center col-span-full">No albums found.</p>}
+        {loading ? (
+          Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-52 w-full rounded-lg" />
+          ))
+        ) : albums.length > 0 ? (
+          albums.map((album) => (
+            <AlbumCard
+              key={album.albumId}
+              album={album}
+              onClick={() => router.push(`/gallery/${album.albumId}`)}
+            />
+          ))
+        ) : (
+          <p className="text-gray-500 text-center col-span-full">
+            No albums found.
+          </p>
+        )}
       </div>
 
       <Pagination
