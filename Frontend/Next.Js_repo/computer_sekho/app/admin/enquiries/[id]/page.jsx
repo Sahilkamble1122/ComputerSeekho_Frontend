@@ -21,12 +21,12 @@ export default function EnquiryDetailPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/enquiry/${id}`);
+      const res = await fetch(`http://localhost:8080/api/enquiries/${id}`);
       if (!res.ok) throw new Error("Failed to fetch enquiry");
       const data = await res.json();
       setEnquiry(data);
 
-      const fRes = await fetch(`/api/followup?enquiry_id=${id}`);
+      const fRes = await fetch(`http://localhost:8080/api/followups?enquiry_id=${id}`);
       if (!fRes.ok) throw new Error("Failed to fetch follow-ups");
       const fData = await fRes.json();
       setFollowups(fData);
@@ -55,21 +55,22 @@ export default function EnquiryDetailPage() {
       </div>
 
       <Card>
-        <CardContent className="p-4 space-y-2">
-          <div><strong>Name:</strong> {enquiry.name}</div>
-          <div><strong>Contact:</strong> {enquiry.contact}</div>
-          <div><strong>Email:</strong> {enquiry.email}</div>
-          <div><strong>Course:</strong> {enquiry.course}</div>
-          <div><strong>Status:</strong> {enquiry.status}</div>
-          <div><strong>Date:</strong> {new Date(enquiry.created_at).toLocaleString()}</div>
-        </CardContent>
-      </Card>
+  <CardContent className="p-4 space-y-2">
+    <div><strong>Name:</strong> {enquiry.enquirerName}</div>
+    <div><strong>Contact:</strong> {enquiry.enquirerMobile}</div>
+    <div><strong>Email:</strong> {enquiry.enquirerEmailId}</div>
+    <div><strong>Query:</strong> {enquiry.enquirerQuery}</div>
+    <div><strong>Status:</strong> {enquiry.closureReason || "Pending"}</div>
+    <div><strong>Date:</strong> {new Date(enquiry.enquiryDate).toLocaleString()}</div>
+  </CardContent>
+</Card>
+
 
       <div className="flex gap-4">
-        <Link href={`/admin/enquiries/followup/${id}/edit`}>
+        <Link href={`/admin/enquiries/followup/${id}`}>
           <Button>Add Follow-Up</Button>
         </Link>
-        <Link href={`/admin/enquiries/closure/${id}/close`}>
+        <Link href={`/admin/enquiries/closure/${id}`}>
           <Button variant="secondary">Close / Success</Button>
         </Link>
       </div>
@@ -83,10 +84,9 @@ export default function EnquiryDetailPage() {
             <CardContent className="p-4 space-y-3">
               {followups.map((f, i) => (
                 <div key={i} className="border-b pb-2">
-                  <div><strong>Date:</strong> {new Date(f.date).toLocaleString()}</div>
-                  <div><strong>Remarks:</strong> {f.remarks}</div>
+                  <div><strong>Date:</strong> {new Date(f.followupDate).toLocaleString()}</div>
+                  <div><strong>Remarks:</strong> {f.followupMsg}</div>
                   <div><strong>Staff:</strong> {f.staff_name}</div>
-                  <div><strong>Status:</strong> {f.status}</div>
                 </div>
               ))}
             </CardContent>

@@ -19,7 +19,7 @@ export default function EnquiryListPage() {
 
   const fetchEnquiries = async () => {
     try {
-      const res = await fetch("/api/enquiry");
+      const res = await fetch("http://localhost:8080/api/enquiries");
       if (!res.ok) throw new Error("Failed to fetch enquiries");
       const data = await res.json();
       setEnquiries(data);
@@ -29,14 +29,13 @@ export default function EnquiryListPage() {
   };
 
   const filtered = enquiries.filter((e) => {
-    const q = searchTerm.toLowerCase();
-    return (
-      e.name?.toLowerCase().includes(q) ||
-      e.contact?.includes(q) ||
-      e.course?.toLowerCase().includes(q)
-    );
-  });
-
+  const q = searchTerm.toLowerCase();
+  return (
+    e.enquirerName?.toLowerCase().includes(q) ||
+    e.enquirerMobile?.toString().includes(q) ||
+    e.enquirerQuery?.toLowerCase().includes(q)
+  );
+});
   const indexOfLast = currentPage * enquiriesPerPage;
   const indexOfFirst = indexOfLast - enquiriesPerPage;
   const currentEnquiries = filtered.slice(indexOfFirst, indexOfLast);
@@ -67,7 +66,8 @@ export default function EnquiryListPage() {
                 <th className="p-2 border">Name</th>
                 <th className="p-2 border">Contact</th>
                 <th className="p-2 border">Email</th>
-                <th className="p-2 border">Course</th>
+                <th className="p-2 border w-[300px]">Query</th>
+                <th className="p-2 border">No Of Followups</th>
                 <th className="p-2 border">Created</th>
                 <th className="p-2 border">Action</th>
               </tr>
@@ -81,14 +81,15 @@ export default function EnquiryListPage() {
                 </tr>
               ) : (
                 currentEnquiries.map((enquiry) => (
-                  <tr key={enquiry.id} className="border-t">
-                    <td className="p-2 border">{enquiry.name}</td>
-                    <td className="p-2 border">{enquiry.contact}</td>
-                    <td className="p-2 border">{enquiry.email}</td>
-                    <td className="p-2 border">{enquiry.course}</td>
-                    <td className="p-2 border">{new Date(enquiry.created_at).toLocaleDateString()}</td>
+                  <tr key={enquiry.enquiryId} className="border-t">
+                    <td className="p-2 border">{enquiry.enquirerName}</td>
+                    <td className="p-2 border">{enquiry.enquirerMobile}</td>
+                    <td className="p-2 border">{enquiry.enquirerEmailId}</td>
+                    <td className="p-2 border">{enquiry.enquirerQuery}</td>
+                    <td className="p-2 border">{enquiry.enquiryCounter}</td>
+                    <td className="p-2 border">{new Date(enquiry.enquiryDate).toLocaleDateString()}</td>
                     <td className="p-2 border">
-                      <Link href={`/admin/enquiries/${enquiry.id}`} passHref>
+                      <Link href={`/admin/enquiries/${enquiry.enquiryId}`} passHref>
                         <Button size="sm">View</Button>
                       </Link>
                     </td>

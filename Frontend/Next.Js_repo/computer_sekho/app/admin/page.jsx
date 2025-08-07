@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Headerbar from './components/Headerbar';
 import Sidebar from './components/Sidebar';
-import FollowUpTable from './Followuptable/page';
+import FollowUpTable from './dashboard/page';
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
 

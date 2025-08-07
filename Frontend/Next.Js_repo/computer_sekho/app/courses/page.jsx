@@ -125,8 +125,8 @@
 // }
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState([]);
@@ -164,7 +164,7 @@ export default function CoursesPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10 space-y-12">
-      <h1 className="text-3xl font-bold text-center text-red-600 mb-6">
+      <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">
         All Courses
       </h1>
 

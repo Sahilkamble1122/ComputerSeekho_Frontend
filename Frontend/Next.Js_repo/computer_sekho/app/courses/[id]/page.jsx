@@ -64,8 +64,10 @@
 //   );
 // }
 "use client";
-import { useEffect, useState } from "react";
+import Footer from "@/app/footer/components/Footer";
+import Navcomponent from "@/app/home/components/Navcomponent";
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function CourseDetailPage() {
   const { courseId } = useParams();
@@ -94,6 +96,8 @@ export default function CourseDetailPage() {
   }
 
   return (
+    <>
+    <Navcomponent/>
     <div className="max-w-6xl mx-auto p-6 space-y-8">
       <img
         src={course.coverPhoto}
@@ -101,7 +105,7 @@ export default function CourseDetailPage() {
         className="w-full h-[400px] object-cover rounded shadow-lg"
       />
 
-      <h1 className="text-4xl font-bold text-red-700 text-center">
+      <h1 className="text-4xl font-bold text-blue-900 text-center">
         {course.courseName}
       </h1>
 
@@ -131,5 +135,7 @@ export default function CourseDetailPage() {
         </p>
       </div>
     </div>
+    <Footer/>
+    </>
   );
 }

@@ -6,7 +6,7 @@ const Navtop = () => {
   return (
     <div className="w-full h-[50px] flex items-stretch relative z-10 overflow-hidden text-sm font-medium">
       {/* Red Section with Slanted End */}
-      <div className="flex-1 bg-red-600 text-white flex items-center justify-center relative z-40 -mr-[25px]">
+      <div className="flex-1 bg-red-600 text-white flex items-center justify-start pl-15 relative z-40 -mr-[25px]">
         <span>HAVE ANY QUESTION ? +9029 435 311</span>
       </div>
 
@@ -17,7 +17,7 @@ const Navtop = () => {
         {/* Wider white diagonal */}
         <div className="absolute inset-0 bg-white clip-white-center z-20" />
         {/* Red fill to remove gap (no right blue strip now) */}
-        <div className="absolute inset-0 bg-red-600  z-30" />
+        <div className="absolute inset-0 bg-red-600 z-30" />
       </div>
 
       {/* Blue Section */}
