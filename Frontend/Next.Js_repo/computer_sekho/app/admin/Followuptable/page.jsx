@@ -10,19 +10,23 @@ export default function AdminDashboard({ adminName }) {
   const [enquiries, setEnquiries] = useState([]);
 
   useEffect(() => {
-    const fetchEnquiries = async () => {
-      try {
-        const res = await fetch('http://localhost:8080/api/enquiries');
-        if (!res.ok) throw new Error('Failed to fetch enquiries');
-        const data = await res.json();
-        setEnquiries(data);
-      } catch (error) {
-        console.error(error);
-        // Optionally add toast notification
-      }
-    };
-    fetchEnquiries();
-  }, []);
+  const fetchEnquiries = async () => {
+    try {
+      const res = await fetch('http://localhost:8080/api/enquiries');
+      if (!res.ok) throw new Error('Failed to fetch enquiries');
+      const data = await res.json();
+
+      // ✅ Filter only those where enquiryProcessedFlag is false
+      const unprocessedEnquiries = data.filter(enq => enq.enquiryProcessedFlag === false);
+      
+      setEnquiries(unprocessedEnquiries);
+    } catch (error) {
+      console.error(error);
+      // Optionally add toast notification
+    }
+  };
+  fetchEnquiries();
+}, []);
 
 //fetch data from staff table 
 
