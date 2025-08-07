@@ -28,6 +28,8 @@ export default function EnquiryForm() {
     paymentDate: "",
     photo: null,
     batchId: "",
+    courseFee: "",
+    pendingFees: "",
   };
 
   const [form, setForm] = useState(initialFormState);
@@ -38,6 +40,7 @@ export default function EnquiryForm() {
   const [loading, setLoading] = useState(false);
   const [courseError, setCourseError] = useState("");
   const [batchError, setBatchError] = useState("");
+  const [selectedBatch, setSelectedBatch] = useState(null);
 
   const getToken = () => localStorage.getItem("token");
 
@@ -135,6 +138,16 @@ export default function EnquiryForm() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    if (name === "batchId") {
+      const selected = batches.find((b) => b.batchId.toString() === value);
+      if (selected) {
+        setForm((prev) => ({
+          ...prev,
+          courseFee: selected.courseFee,
+          pendingFees: selected.courseFee,
+        }));
+      }
+    }
   };
 
   const validateForm = () => {
@@ -160,6 +173,8 @@ export default function EnquiryForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    form.courseFee = selectedBatch?.courseFee || 0;
+    form.pendingFees = form.courseFee;
     if (!validateForm()) {
       alert("❌ Please correct the errors before submitting.");
       return;
@@ -200,6 +215,9 @@ export default function EnquiryForm() {
         const errorText = await response.text();
         throw new Error(errorText || "Failed to register student");
       }
+      // if (response.ok) {
+      //   router.push("/admin/students"); // or your desired page
+      // }
 
       alert("✅ Student registered successfully!");
       setForm(initialFormState);
@@ -419,20 +437,39 @@ export default function EnquiryForm() {
 
         <div>
           <label className="block font-semibold mb-1">Batch Name:</label>
+
           <select
+            id="batchId"
             name="batchId"
             value={form.batchId}
-            onChange={handleChange}
-            className="input"
-            disabled={loading}
+            onChange={(e) => {
+              const selected = batches.find(
+                (batch) => batch.batchId === parseInt(e.target.value)
+              );
+              setForm((prevForm) => ({
+                ...prevForm,
+                batchId: e.target.value,
+                courseFee: selected?.courseFee || 0,
+                pendingFees: selected?.courseFees || 0,
+              }));
+              setSelectedBatch(selected); // <- define this in useState
+            }}
+            className="w-full border border-gray-300 p-2 rounded"
+            required
           >
-            <option value="">-- Select Batch --</option>
+            <option value="">Select Batch</option>
             {batches.map((batch) => (
               <option key={batch.batchId} value={batch.batchId}>
-                {batch.batchId} - {batch.batchName}
+                {batch.batchName}
               </option>
             ))}
           </select>
+          {form.courseFees && (
+            <p className="text-sm text-green-600 mt-1">
+              Total Fees: ₹{form.courseFee}
+            </p>
+          )}
+
           {errors.batchId && (
             <p className="text-red-600 text-sm">{errors.batchId}</p>
           )}
