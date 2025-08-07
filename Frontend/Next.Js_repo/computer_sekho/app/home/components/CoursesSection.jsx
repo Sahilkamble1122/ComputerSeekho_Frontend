@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import CourseCard from "../../courses/components/CourseCard";
+import CourseCard from "@/app/courses/components/Coursecard";
+
 export default function CoursesSection() {
   const [courses, setCourses] = useState([]);
 
