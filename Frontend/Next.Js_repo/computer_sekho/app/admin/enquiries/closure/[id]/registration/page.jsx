@@ -1,8 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 
 export default function EnquiryForm() {
+  const params = useParams();
+  const enquiryId = params?.id;
+
   const initialFormState = {
     name: "",
     dob: "",
@@ -35,12 +39,42 @@ export default function EnquiryForm() {
   const [courseError, setCourseError] = useState("");
   const [batchError, setBatchError] = useState("");
 
+  const getToken = () => localStorage.getItem("token");
+
   useEffect(() => {
     fetchCourses();
     fetchBatches();
-  }, []);
+    if (enquiryId) {
+      fetchEnquiryData(enquiryId);
+    }
+  }, [enquiryId]);
 
-  const getToken = () => localStorage.getItem("token");
+  const fetchEnquiryData = async (id) => {
+    try {
+      const token = getToken();
+      const res = await fetch(`http://localhost:8080/api/enquiries/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch enquiry data");
+      const data = await res.json();
+      setForm((prev) => ({
+        ...prev,
+        name: data.name || "",
+        dob: data.dob || "",
+        gender: data.gender || "",
+        resAddress: data.enquirerAddress || "",
+        officeAddress: data.officeAddress || "",
+        phoneR: data.phoneR || "",
+        phoneO: data.phoneO || "",
+        mobile: data.mobile || "",
+        email: data.email || "",
+        qualification: data.qualification || "",
+        course: data.courseId || "",
+      }));
+    } catch (err) {
+      console.error("Error loading enquiry data:", err);
+    }
+  };
 
   const fetchCourses = async () => {
     setLoading(true);
@@ -109,10 +143,14 @@ export default function EnquiryForm() {
     if (!form.name.trim()) newErrors.name = "Name is required";
     if (!form.dob) newErrors.dob = "Date of Birth is required";
     if (!form.gender) newErrors.gender = "Gender is required";
-    if (!form.resAddress.trim()) newErrors.resAddress = "Residential address is required";
-    if (!form.mobile.trim() || !/^\d{10}$/.test(form.mobile)) newErrors.mobile = "Valid 10-digit mobile number is required";
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) newErrors.email = "Valid email is required";
-    if (!form.qualification.trim()) newErrors.qualification = "Qualification is required";
+    if (!form.resAddress.trim())
+      newErrors.resAddress = "Residential address is required";
+    if (!form.mobile.trim() || !/^\d{10}$/.test(form.mobile))
+      newErrors.mobile = "Valid 10-digit mobile number is required";
+    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
+      newErrors.email = "Valid email is required";
+    if (!form.qualification.trim())
+      newErrors.qualification = "Qualification is required";
     if (!form.course.trim()) newErrors.course = "Course is required";
     if (!form.batchId) newErrors.batchId = "Batch is required";
 
@@ -121,56 +159,54 @@ export default function EnquiryForm() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!validateForm()) {
-    alert("❌ Please correct the errors before submitting.");
-    return;
-  }
-
-  try {
-    const token = getToken();
-    if (!token) {
-      alert("❌ You are not logged in.");
+    e.preventDefault();
+    if (!validateForm()) {
+      alert("❌ Please correct the errors before submitting.");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("studentName", form.name);
-    formData.append("studentAddress", form.resAddress);
-    formData.append("studentGender", form.gender);
-    formData.append("studentDob", form.dob);
-    formData.append("studentQualification", form.qualification);
-    formData.append("studentMobile", form.mobile);
-    formData.append("studentEmail", form.email);
-    formData.append("courseId", form.course);
-    formData.append("studentPassword", "pass123");
-    formData.append("studentUsername", form.email);
-    formData.append("batchId", form.batchId);
-    if (form.photo) {
-      formData.append("photo", form.photo);
+    try {
+      const token = getToken();
+      if (!token) {
+        alert("❌ You are not logged in.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("studentName", form.name);
+      formData.append("studentAddress", form.resAddress);
+      formData.append("studentGender", form.gender);
+      formData.append("studentDob", form.dob);
+      formData.append("studentQualification", form.qualification);
+      formData.append("studentMobile", form.mobile);
+      formData.append("studentEmail", form.email);
+      formData.append("courseId", form.course);
+      formData.append("studentPassword", "pass123");
+      formData.append("studentUsername", form.email);
+      formData.append("batchId", form.batchId);
+      if (form.photo) {
+        formData.append("photo", form.photo);
+      }
+
+      const response = await fetch("http://localhost:8080/api/students/form", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to register student");
+      }
+
+      alert("✅ Student registered successfully!");
+      setForm(initialFormState);
+      setPreview(null);
+    } catch (error) {
+      alert("❌ Registration failed: " + error.message);
     }
-
-    const response = await fetch("http://localhost:8080/api/students/form", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        // Do NOT set Content-Type when using FormData; browser will set it
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Failed to register student");
-    }
-
-    alert("✅ Student registered successfully!");
-    setForm(initialFormState);
-    setPreview(null);
-  } catch (error) {
-    alert("❌ Registration failed: " + error.message);
-  }
-
   };
 
   return (
@@ -182,8 +218,6 @@ export default function EnquiryForm() {
         </h2>
         <div className="w-20" />
       </div>
-
-     
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
@@ -380,9 +414,7 @@ export default function EnquiryForm() {
           {errors.course && (
             <p className="text-red-600 text-sm">{errors.course}</p>
           )}
-          {courseError && (
-            <p className="text-red-600 text-sm">{courseError}</p>
-          )}
+          {courseError && <p className="text-red-600 text-sm">{courseError}</p>}
         </div>
 
         <div>
@@ -404,9 +436,7 @@ export default function EnquiryForm() {
           {errors.batchId && (
             <p className="text-red-600 text-sm">{errors.batchId}</p>
           )}
-          {batchError && (
-            <p className="text-red-600 text-sm">{batchError}</p>
-          )}
+          {batchError && <p className="text-red-600 text-sm">{batchError}</p>}
         </div>
 
         <button

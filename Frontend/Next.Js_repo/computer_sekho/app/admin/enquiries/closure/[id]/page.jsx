@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -20,13 +20,13 @@ export default function CloseEnquiryPage() {
     handleSubmit,
     watch,
     formState: { errors },
-    setError
+    setError,
   } = useForm({
     defaultValues: {
       status: "success",
       closureReason: "",
-      otherReason: ""
-    }
+      otherReason: "",
+    },
   });
 
   const watchStatus = watch("status");
@@ -66,22 +66,29 @@ export default function CloseEnquiryPage() {
       const isOther = values.closureReason === "Other";
 
       const payload = {
-        closureReasonId: values.status === "closed" && !isOther ? parseInt(values.closureReason) : null,
-        closureReason: values.status === "closed" && isOther ? values.otherReason : null
+        closureReasonId:
+          values.status === "closed" && !isOther
+            ? parseInt(values.closureReason)
+            : null,
+        closureReason:
+          values.status === "closed" && isOther ? values.otherReason : null,
       };
 
-      const res = await fetch(`http://localhost:8080/api/enquiries/${id}/closure`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `http://localhost:8080/api/enquiries/${id}/closure`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!res.ok) throw new Error("Failed to close enquiry");
 
       toast.success("Enquiry marked as closed");
 
       if (values.status === "success") {
-        router.push(`/admin/enquiries/closure?enquiryId=${id}/registration`);
+        router.push(`/admin/enquiries/closure/${id}/registration`);
       } else {
         router.push("/admin/enquiries");
       }
@@ -94,48 +101,80 @@ export default function CloseEnquiryPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Close / Mark Enquiry as Success</h2>
+      <h2 className="text-2xl font-bold mb-4">
+        Close / Mark Enquiry as Success
+      </h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label className="block mb-1 font-medium">Status</label>
-          <select {...register("status")} className="w-full border px-3 py-2 rounded-md">
+          <select
+            {...register("status")}
+            className="w-full border px-3 py-2 rounded-md"
+          >
             <option value="success">Success</option>
             <option value="closed">Closed</option>
           </select>
-          {errors.status && <p className="text-red-500 text-sm mt-1">{errors.status.message}</p>}
+          {errors.status && (
+            <p className="text-red-500 text-sm mt-1">{errors.status.message}</p>
+          )}
         </div>
 
         {watchStatus === "closed" && (
           <>
             <div>
               <label className="block mb-1 font-medium">Closure Reason</label>
-              <select {...register("closureReason")}
-                      className="w-full border px-3 py-2 rounded-md">
+              <select
+                {...register("closureReason")}
+                className="w-full border px-3 py-2 rounded-md"
+              >
                 <option value="">Select reason</option>
                 {closureReasons.map((r, index) => (
-                  <option key={index} value={r.closureReasonDesc === "Other" ? "Other" : r.closureReasonId}>
+                  <option
+                    key={index}
+                    value={
+                      r.closureReasonDesc === "Other"
+                        ? "Other"
+                        : r.closureReasonId
+                    }
+                  >
                     {r.closureReasonDesc}
                   </option>
                 ))}
               </select>
-              {errors.closureReason && <p className="text-red-500 text-sm mt-1">{errors.closureReason.message}</p>}
+              {errors.closureReason && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.closureReason.message}
+                </p>
+              )}
             </div>
 
-            {watchReason === 'Other' && (
+            {watchReason === "Other" && (
               <div>
-                <label className="block mb-1 font-medium">Specify Other Reason</label>
-                <Input {...register("otherReason")}
-                       placeholder="Type reason here..."
-                       className="w-full" />
-                {errors.otherReason && <p className="text-red-500 text-sm mt-1">{errors.otherReason.message}</p>}
+                <label className="block mb-1 font-medium">
+                  Specify Other Reason
+                </label>
+                <Input
+                  {...register("otherReason")}
+                  placeholder="Type reason here..."
+                  className="w-full"
+                />
+                {errors.otherReason && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.otherReason.message}
+                  </p>
+                )}
               </div>
             )}
           </>
         )}
 
         <Button type="submit" disabled={loading}>
-          {watchStatus === "success" ? "Add Student" : loading ? "Submitting..." : "Close Enquiry"}
+          {watchStatus === "success"
+            ? "Add Student"
+            : loading
+            ? "Submitting..."
+            : "Close Enquiry"}
         </Button>
       </form>
     </div>
