@@ -3,10 +3,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Footer from "../footer/components/Footer";
+import Navcomponent from "../home/components/Navcomponent";
 import AlbumCard from "./components/AlbumCard";
 import Pagination from "./components/Pagination";
-import Navcomponent from "../home/components/Navcomponent";
-import Footer from "../footer/components/Footer";
 
 export default function GalleryPage() {
   const router = useRouter();
@@ -62,7 +62,10 @@ export default function GalleryPage() {
             albums.map((album) => (
               <AlbumCard
                 key={album.albumId}
-                album={album}
+                id={album.albumId}
+                title={album.albumName}
+                description={album.albumDescription}
+                coverImage={album.coverImage}
                 onClick={() => router.push(`/gallery/${album.albumId}`)}
               />
             ))
