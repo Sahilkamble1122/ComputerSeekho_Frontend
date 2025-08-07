@@ -10,6 +10,7 @@ import {
   UserCog,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -21,6 +22,7 @@ const navItems = [
   { name: 'Placements', icon: Users, path: '/admin/placement' },
   { name: 'Staffs', icon: UserCog, path: '/admin/staffs' },
   { name: 'Courses', icon: BookOpen, path: '/admin/courses' },
+  { name: 'Payments', icon: CreditCard, path: '/admin/payments' },
 ];
 
 export default function Sidebar({ admin }) {

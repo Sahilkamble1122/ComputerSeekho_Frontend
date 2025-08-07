@@ -187,39 +187,47 @@ export default function EnquiryForm() {
         return;
       }
 
-      const formData = new FormData();
-      formData.append("studentName", form.name);
-      formData.append("studentAddress", form.resAddress);
-      formData.append("studentGender", form.gender);
-      formData.append("studentDob", form.dob);
-      formData.append("studentQualification", form.qualification);
-      formData.append("studentMobile", form.mobile);
-      formData.append("studentEmail", form.email);
-      formData.append("courseId", form.course);
-      formData.append("studentPassword", "pass123");
-      formData.append("studentUsername", form.email);
-      formData.append("batchId", form.batchId);
-      formData.append("courseFee", form.courseFee);
-      formData.append("pendingFees", form.pendingFees);
-      if (form.photo) {
-        formData.append("photo", form.photo);
+      // Convert photo to base64 if it exists
+      let photoBase64 = null;
+      if (form.photo instanceof File) {
+        photoBase64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(form.photo);
+        });
       }
 
-      const response = await fetch("http://localhost:8080/api/students/form", {
+      // Prepare JSON payload
+      const studentData = {
+        studentName: form.name,
+        studentAddress: form.resAddress,
+        studentGender: form.gender,
+        studentDob: form.dob,
+        studentQualification: form.qualification,
+        studentMobile: form.mobile,
+        studentEmail: form.email,
+        courseId: parseInt(form.course),
+        studentPassword: "pass123",
+        studentUsername: form.email,
+        batchId: parseInt(form.batchId),
+        courseFee: parseFloat(form.courseFee),
+        pendingFees: parseFloat(form.pendingFees),
+        photo: photoBase64
+      };
+
+      const response = await fetch("http://localhost:8080/api/students", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
-        body: formData,
+        body: JSON.stringify(studentData),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(errorText || "Failed to register student");
       }
-      // if (response.ok) {
-      //   router.push("/admin/students"); // or your desired page
-      // }
 
       alert("✅ Student registered successfully!");
       setForm(initialFormState);
