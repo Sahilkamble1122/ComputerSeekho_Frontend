@@ -51,21 +51,22 @@ export default function FollowUpEditPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          staff_id: 1, // Replace with actual staff ID (login context)
-          is_active: true
+          staffId: 1, // Replace with actual staff ID (login context)
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to submit follow-up');
+      if (!res.ok) {throw new Error('Failed to submit follow-up');}
 
-      const updateRes = await fetch(`http://localhost:8080/api/enquiries/${id}`, {
-  method: 'PUT',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    ...enquiry,
-    enquiryCounter: enquiry.enquiryCounter + 1,
-  }),
-});
+      const enquiryRes = await fetch(`http://localhost:8080/api/enquiries/${id}`);
+const enquiry = await enquiryRes.json();
+const newValue = enquiry.enquiryCounter + 1;
+
+      const updateRes = await fetch(
+  `http://localhost:8080/api/enquiries/${id}/counter?enquiryCounter=${newValue}`,
+  {
+    method: 'PATCH',
+  }
+);
 
       if (!updateRes.ok) throw new Error('Failed to increment counter');
 
@@ -104,7 +105,7 @@ export default function FollowUpEditPage() {
               <Input
                 type="date"
                 name="followup_date"
-                value={formData.followup_date}
+                value={formData.followupDate}
                 onChange={handleChange}
                 required
               />
@@ -114,7 +115,7 @@ export default function FollowUpEditPage() {
               <Textarea
                 name="followup_msg"
                 placeholder="Write comment here"
-                value={formData.followup_msg}
+                value={formData.followupMsg}
                 onChange={handleChange}
                 required
               />
