@@ -20,11 +20,13 @@ export default function EnquiryForm() {
     setValue
   } = useForm();
 
-  
-  setCurrentAdmin(localStorage.getItem("loginName") || ""); // Get admin name from localStorage
+  // ✅ Set current admin name only once after mount
+  useEffect(() => {
+    const adminName = localStorage.getItem("admin") || "";
+    setCurrentAdmin(adminName);
+  }, []);
 
-
-  // Set staff field once admin is fetched
+  // ✅ Once currentAdmin is fetched, set it in the form
   useEffect(() => {
     if (currentAdmin) {
       setValue("staff", currentAdmin);

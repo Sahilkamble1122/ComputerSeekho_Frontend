@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 export default function FollowUpEditPage() {
   const { id } = useParams();
   const router = useRouter();
-  const [formData, setFormData] = useState({ followup_date: '', followup_msg: '' });
+  const [formData, setFormData] = useState({ followupDate: '', followupMsg: '' });
   const [enquiry, setEnquiry] = useState(null);
 
   useEffect(() => {
@@ -51,6 +51,7 @@ export default function FollowUpEditPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          enquiryId: id,
           staffId: 1, // Replace with actual staff ID (login context)
         }),
       });
