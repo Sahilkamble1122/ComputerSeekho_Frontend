@@ -7,32 +7,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-
-const closeSchema = z.object({
-  status: z.enum(["success", "closed"], {
-    required_error: "Status is required"
-  }),
-  closureReason: z.string().min(1, "Closure reason is required"),
-  otherReason: z.string().optional(),
-});
 
 export default function CloseEnquiryPage() {
   const { id } = useParams();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [closureReasons, setClosureReasons] = useState([]);
-  const [selectedReason, setSelectedReason] = useState('');
 
   const {
     register,
     handleSubmit,
     watch,
-    formState: { errors }
+    formState: { errors },
+    setError
   } = useForm({
-    resolver: zodResolver(closeSchema),
     defaultValues: {
       status: "success",
       closureReason: "",
@@ -51,24 +40,38 @@ export default function CloseEnquiryPage() {
       const res = await fetch("http://localhost:8080/api/closure-reasons");
       if (!res.ok) throw new Error("Failed to fetch closure reasons");
       const data = await res.json();
-      setClosureReasons([...data, { reason: "Other" }]);
+      setClosureReasons([...data, { closureReasonDesc: "Other" }]);
     } catch (err) {
       toast.error("Error loading closure reasons");
     }
   };
 
   const onSubmit = async (values) => {
+    if (!values.closureReason) {
+      setError("closureReason", { message: "Closure reason is required" });
+      return;
+    }
+
+    if (values.closureReason === "Other" && !values.otherReason.trim()) {
+      setError("otherReason", { message: "Please specify the reason" });
+      return;
+    }
+
     try {
       setLoading(true);
-      const finalRemarks = values.closureReason === 'Other' ? values.otherReason : values.closureReason;
 
-      const res = await fetch(`http://localhost:8080/api/enquiry/${id}/close`, {
-        method: "POST",
+      const isOther = values.closureReason === "Other";
+
+      const payload = {
+        status: true,
+        closureReasonId: isOther ? null : values.closureReason,
+        closureReason: isOther ? values.otherReason : null
+      };
+
+      const res = await fetch(`http://localhost:8080/api/enquiries/${id}/close`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: values.status,
-          closingRemarks: finalRemarks
-        })
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) throw new Error("Failed to close enquiry");
@@ -102,7 +105,9 @@ export default function CloseEnquiryPage() {
                   className="w-full border px-3 py-2 rounded-md">
             <option value="">Select reason</option>
             {closureReasons.map((r, index) => (
-              <option key={index} value={r.closureReasonId}>{r.reason}</option>
+              <option key={index} value={r.closureReasonDesc === "Other" ? "Other" : r.closureReasonId}>
+                {r.closureReasonDesc}
+              </option>
             ))}
           </select>
           {errors.closureReason && <p className="text-red-500 text-sm mt-1">{errors.closureReason.message}</p>}
@@ -114,6 +119,7 @@ export default function CloseEnquiryPage() {
             <Input {...register("otherReason")}
                    placeholder="Type reason here..."
                    className="w-full" />
+            {errors.otherReason && <p className="text-red-500 text-sm mt-1">{errors.otherReason.message}</p>}
           </div>
         )}
 
