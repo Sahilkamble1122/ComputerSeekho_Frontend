@@ -199,6 +199,8 @@ export default function EnquiryForm() {
       formData.append("studentPassword", "pass123");
       formData.append("studentUsername", form.email);
       formData.append("batchId", form.batchId);
+      formData.append("courseFee", form.courseFee);
+      formData.append("pendingFees", form.pendingFees);
       if (form.photo) {
         formData.append("photo", form.photo);
       }
@@ -450,7 +452,7 @@ export default function EnquiryForm() {
                 ...prevForm,
                 batchId: e.target.value,
                 courseFee: selected?.courseFee || 0,
-                pendingFees: selected?.courseFees || 0,
+                pendingFees: selected?.courseFee || 0,
               }));
               setSelectedBatch(selected); // <- define this in useState
             }}
@@ -464,7 +466,7 @@ export default function EnquiryForm() {
               </option>
             ))}
           </select>
-          {form.courseFees && (
+          {form.courseFee && (
             <p className="text-sm text-green-600 mt-1">
               Total Fees: ₹{form.courseFee}
             </p>
