@@ -97,45 +97,46 @@ export default function CourseDetailPage() {
 
   return (
     <>
-    <Navcomponent/>
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
-      <img
-        src={course.coverPhoto}
-        alt={course.courseName || "Course Cover"}
-        className="w-full h-[400px] object-cover rounded shadow-lg"
-      />
+      <Navcomponent />
+      <div className="max-w-6xl mx-auto p-6 space-y-8 pt-[150px]">
+        <img
+          src={course.coverPhoto}
+          alt={course.courseName || "Course Cover"}
+          className="w-full h-[400px] object-cover rounded shadow-lg"
+        />
 
-      <h1 className="text-4xl font-bold text-blue-900 text-center">
-        {course.courseName}
-      </h1>
+        <h1 className="text-4xl font-bold text-blue-900 text-center">
+          {course.courseName}
+        </h1>
 
-      <div className="bg-white p-6 rounded shadow space-y-4 text-gray-700">
-        <p>
-          <span className="font-semibold">Description:</span>{" "}
-          {course.courseDescription}
-        </p>
-        <p>
-          <span className="font-semibold">Syllabus:</span>{" "}
-          {course.courseSyllabus}
-        </p>
-        <p>
-          <span className="font-semibold">Duration:</span>{" "}
-          {course.courseDuration} days
-        </p>
-        <p>
-          <span className="font-semibold">Age Group:</span> {course.ageGrpType}
-        </p>
-        <p>
-          <span className="font-semibold">Video File Path:</span>{" "}
-          {course.videoId}
-        </p>
-        <p>
-          <span className="font-semibold">Active Status:</span>{" "}
-          {course.courseIsActive ? "Active" : "Inactive"}
-        </p>
+        <div className="bg-white p-6 rounded shadow space-y-4 text-gray-700">
+          <p>
+            <span className="font-semibold">Description:</span>{" "}
+            {course.courseDescription}
+          </p>
+          <p>
+            <span className="font-semibold">Syllabus:</span>{" "}
+            {course.courseSyllabus}
+          </p>
+          <p>
+            <span className="font-semibold">Duration:</span>{" "}
+            {course.courseDuration} days
+          </p>
+          <p>
+            <span className="font-semibold">Age Group:</span>{" "}
+            {course.ageGrpType}
+          </p>
+          <p>
+            <span className="font-semibold">Video File Path:</span>{" "}
+            {course.videoId}
+          </p>
+          <p>
+            <span className="font-semibold">Active Status:</span>{" "}
+            {course.courseIsActive ? "Active" : "Inactive"}
+          </p>
+        </div>
       </div>
-    </div>
-    <Footer/>
+      <Footer />
     </>
   );
 }
