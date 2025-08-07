@@ -18,26 +18,17 @@ const Footer = () => {
   }, []);
 
   const scrollToTop = () => {
-    const scrollDuration = 600; // total duration in ms
-    const scrollStep = -window.scrollY / (scrollDuration / 16); // scroll amount per frame
-
-    const scrollInterval = setInterval(() => {
-      if (window.scrollY !== 0) {
-        window.scrollBy(0, scrollStep);
-      } else {
-        clearInterval(scrollInterval);
-      }
-    }, 16); // ~60 fps
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <>
       <footer className="bg-gray-100 pt-10 relative">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-wrap justify-between gap-10">
+          <div className="flex flex-wrap md:flex-nowrap justify-between gap-10">
 
             {/* Logo and About */}
-            <div className="w-full sm:w-[250px]">
+            <div className="w-full md:w-[250px]">
               <div className="flex items-center space-x-2 mb-4">
                 <Image
                   src="/vita_logo.png"
@@ -55,7 +46,7 @@ const Footer = () => {
 
             {/* Information Links */}
             <div className="flex-1 min-w-[180px]">
-              <h4 className="text-lg font-bold mb-3 text-gray-800 uppercase">Information</h4>
+              <h4 className="text-2xl font-bold mb-3 text-blue-900 ">Information</h4>
               <div className="w-10 h-[2px] bg-gray-400 mb-4"></div>
               <ul className="space-y-2 text-gray-600 text-sm">
                 <li><Link href="#">Admission</Link></li>
@@ -67,7 +58,7 @@ const Footer = () => {
 
             {/* Useful Links */}
             <div className="flex-1 min-w-[180px]">
-              <h4 className="text-lg font-bold mb-3 text-gray-800 uppercase">Useful Links</h4>
+              <h4 className="text-2xl font-bold mb-3 text-blue-900 ">Useful Links</h4>
               <div className="w-10 h-[2px] bg-gray-400 mb-4"></div>
               <ul className="space-y-2 text-gray-600 text-sm">
                 <li><Link href="/courses">Our Courses</Link></li>
@@ -79,7 +70,7 @@ const Footer = () => {
 
             {/* Get In Touch */}
             <div className="flex-1 min-w-[200px]">
-              <h4 className="text-lg font-bold mb-3 text-gray-800 uppercase">Get In Touch</h4>
+              <h4 className="text-2xl font-bold mb-3 text-blue-900">Get In Touch</h4>
               <div className="w-10 h-[2px] bg-gray-400 mb-4"></div>
               <p className="text-gray-600 text-sm mb-2">
                 5th Floor, Vidyanidhi Education Complex, Vidyanidhi Road, Juhu Scheme, Andheri (W), Mumbai 400 049 India
