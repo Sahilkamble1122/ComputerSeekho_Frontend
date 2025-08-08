@@ -130,7 +130,7 @@ export default function BatchPage() {
   };
 
   const filteredBatches = batches.filter((batch) =>
-    batch.batch_name.toLowerCase().includes(searchTerm.toLowerCase())
+    (batch.batch_name || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const indexOfLastBatch = currentPage * batchesPerPage;
