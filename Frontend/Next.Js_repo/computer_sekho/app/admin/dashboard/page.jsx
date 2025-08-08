@@ -7,33 +7,53 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function AdminDashboard({ adminName }) {
   const [enquiries, setEnquiries] = useState([]);
+  const [staffList, setStaffList] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   useEffect(() => {
-    const fetchEnquiries = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch("http://localhost:8080/api/enquiries", {
+        
+        // Fetch enquiries
+        const enquiriesRes = await fetch("http://localhost:8080/api/enquiries", {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        if (!res.ok) throw new Error("Failed to fetch enquiries");
-        const data = await res.json();
+        if (!enquiriesRes.ok) throw new Error("Failed to fetch enquiries");
+        const enquiriesData = await enquiriesRes.json();
 
         // 🔍 Filter only enquiries where enquiryProcessedFlag === false
-        const unprocessedEnquiries = data.filter(
+        const unprocessedEnquiries = enquiriesData.filter(
           (enq) => enq.enquiryProcessedFlag === false
         );
 
+        // Fetch staff data
+        const staffRes = await fetch("http://localhost:8080/api/staff", {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!staffRes.ok) throw new Error("Failed to fetch staff");
+        const staffData = await staffRes.json();
+
         setEnquiries(unprocessedEnquiries);
+        setStaffList(staffData);
       } catch (error) {
         console.error(error);
       }
     };
-    fetchEnquiries();
+    fetchData();
   }, []);
+
+  // Function to get staff name by staff ID
+  const getStaffName = (staffId) => {
+    if (!staffId || !staffList.length) return "N/A";
+    const staff = staffList.find(s => s.staffId === staffId);
+    return staff ? staff.staffName : "N/A";
+  };
 
   // Safe & sorted data
   const safeData = Array.isArray(enquiries) ? enquiries : [];
@@ -78,6 +98,7 @@ export default function AdminDashboard({ adminName }) {
                 <th className="p-3 border font-bold w-[300px]">Query</th>
                 <th className="p-3 border font-bold">Follow-up Date</th>
                 <th className="p-3 border font-bold">Staff Name</th>
+                <th className="p-3 border font-bold">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -99,7 +120,14 @@ export default function AdminDashboard({ adminName }) {
                     <td className="p-2 border">{enquiry.enquirerMobile}</td>
                     <td className="p-2 border">{enquiry.enquirerQuery}</td>
                     <td className="p-2 border">{enquiry.followUpDate}</td>
-                    <td className="p-2 border">{enquiry.staffName}</td>
+                    <td className="p-2 border">{getStaffName(enquiry.assignedStaffId)}</td>
+                    <td className="p-2 border">
+                      <Link href={`/admin/enquiries/${enquiry.enquiryId}`}>
+                        <Button size="sm" variant="outline">
+                          View Details
+                        </Button>
+                      </Link>
+                    </td>
                   </tr>
                 ))
               )}
