@@ -26,7 +26,12 @@ export default function AddAlbum() {
 
   const fetchAlbums = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/albums"); // ✅ Fetch all albums from API
+      const token = localStorage.getItem('token');
+      const res = await fetch("http://localhost:8080/api/albums", {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }); // ✅ Fetch all albums from API
       const data = await res.json();
       setAlbums(data);
     } catch (err) {
@@ -39,8 +44,12 @@ export default function AddAlbum() {
     if (!confirm("Are you sure you want to delete this album?")) return;
 
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:8080/api/albums/${id}`, {
         method: "DELETE", // ✅ Delete album by ID
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (!res.ok) throw new Error("Delete failed");
@@ -64,10 +73,12 @@ export default function AddAlbum() {
     }
 
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch("http://localhost:8080/api/albums", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           albumName: albumName,
@@ -108,8 +119,12 @@ export default function AddAlbum() {
     });
 
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch("http://localhost:8080/api/images", {
         method: "POST", // ✅ Upload multiple images
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
       });
 

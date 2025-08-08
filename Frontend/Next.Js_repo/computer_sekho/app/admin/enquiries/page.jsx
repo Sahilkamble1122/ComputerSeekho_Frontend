@@ -19,7 +19,10 @@ export default function EnquiryListPage() {
 
   const fetchEnquiries = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/enquiries");
+      const token = localStorage.getItem('token');
+      const res = await fetch("http://localhost:8080/api/enquiries", {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (!res.ok) throw new Error("Failed to fetch enquiries");
       const data = await res.json();
       setEnquiries(data);

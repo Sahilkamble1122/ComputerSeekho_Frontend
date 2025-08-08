@@ -36,16 +36,23 @@ export default function ManagePlacementsPage() {
   const pageSize = 5;
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/courses")
+    const token = localStorage.getItem('token');
+    fetch("http://localhost:8080/api/courses", {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then((res) => res.json())
       .then((data) => setCourses(data));
 
-    fetch("http://localhost:8080/api/batches/active")
+    fetch("http://localhost:8080/api/batches/active", {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then((res) => res.json())
       .then((data) => setBatches(data));
 
     // ✅ Fetch all students once
-    fetch("http://localhost:8080/api/students")
+    fetch("http://localhost:8080/api/students", {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then((res) => res.json())
       .then((data) => setStudents(data))
       .catch(() => toast({ title: "Error fetching students" }));
@@ -77,9 +84,10 @@ export default function ManagePlacementsPage() {
 
   const handlePlacementToggle = async (studentId, isPlaced) => {
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`/api/students/${studentId}/placement`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ isPlaced: isPlaced }),
       });
       if (!res.ok) throw new Error();

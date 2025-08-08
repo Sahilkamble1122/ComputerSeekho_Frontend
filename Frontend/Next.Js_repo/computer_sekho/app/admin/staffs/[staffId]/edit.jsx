@@ -25,7 +25,10 @@ export default function EditStaff() {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const res = await fetch(`/api/staff/${staffId}`); // 🔁 Replace with your API endpoint
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/staff/${staffId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }); // 🔁 Replace with your API endpoint
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);
         setStaff(data);
@@ -42,9 +45,10 @@ export default function EditStaff() {
     e.preventDefault();
 
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`/api/staff/${staffId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(staff),
       });
 

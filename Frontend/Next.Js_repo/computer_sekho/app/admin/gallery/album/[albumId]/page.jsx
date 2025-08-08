@@ -18,7 +18,12 @@ export default function AlbumImagesPage() {
 
   const fetchImages = async () => {
     try {
-      const res = await fetch(`/api/images?albumId=${albumId}`);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/images?albumId=${albumId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await res.json();
       const coverFirst = [...data].sort((a, b) => b.isAlbumCover - a.isAlbumCover);
       setImages(coverFirst);
@@ -31,7 +36,13 @@ export default function AlbumImagesPage() {
   const handleDeleteImage = async (imageId) => {
     if (!confirm("Delete this image?")) return;
     try {
-      const res = await fetch(`/api/images/${imageId}`, { method: "DELETE" });
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/images/${imageId}`, { 
+        method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (!res.ok) throw new Error();
       toast.success("Image deleted");
       fetchImages();
@@ -42,7 +53,13 @@ export default function AlbumImagesPage() {
 
   const handleSetCover = async (imageId) => {
     try {
-      const res = await fetch(`/api/images/${imageId}/cover`, { method: "PUT" });
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/images/${imageId}/cover`, { 
+        method: "PUT",
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (!res.ok) throw new Error();
       toast.success("Cover updated");
       fetchImages();

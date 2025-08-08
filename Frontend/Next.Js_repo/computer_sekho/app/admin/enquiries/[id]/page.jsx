@@ -21,12 +21,17 @@ export default function EnquiryDetailPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:8080/api/enquiries/${id}`);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:8080/api/enquiries/${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (!res.ok) throw new Error("Failed to fetch enquiry");
       const data = await res.json();
       setEnquiry(data);
 
-      const fRes = await fetch(`http://localhost:8080/api/followups?enquiry_id=${id}`);
+      const fRes = await fetch(`http://localhost:8080/api/followups?enquiry_id=${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (!fRes.ok) throw new Error("Failed to fetch follow-ups");
       const fData = await fRes.json();
       setFollowups(fData);

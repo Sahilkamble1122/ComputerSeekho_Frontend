@@ -38,7 +38,12 @@ export default function CloseEnquiryPage() {
 
   const fetchClosureReasons = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/closure-reasons");
+      const token = localStorage.getItem('token');
+      const res = await fetch("http://localhost:8080/api/closure-reasons", {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (!res.ok) throw new Error("Failed to fetch closure reasons");
       const data = await res.json();
       setClosureReasons([...data, { closureReasonDesc: "Other" }]);
@@ -74,11 +79,12 @@ export default function CloseEnquiryPage() {
           values.status === "closed" && isOther ? values.otherReason : null,
       };
 
+      const token = localStorage.getItem('token');
       const res = await fetch(
         `http://localhost:8080/api/enquiries/${id}/closure`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${token}` },
           body: JSON.stringify(payload),
         }
       );

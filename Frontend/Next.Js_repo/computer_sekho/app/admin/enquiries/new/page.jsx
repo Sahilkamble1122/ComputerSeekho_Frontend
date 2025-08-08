@@ -33,10 +33,29 @@ export default function EnquiryForm() {
 
   const onSubmit = async (data) => {
     try {
+      const token = localStorage.getItem("token");
+
+      // Map form fields to backend expected keys
+      const payload = {
+        enquirerName: data.name,
+        studentName: data.student_name,
+        enquirerEmailId: data.email,
+        enquirerMobile: data.mobile ? parseInt(data.mobile, 10) : null,
+        enquirerAlternateMobile: data.alt_mobile ? parseInt(data.alt_mobile, 10) : null,
+        enquirerAddress: data.address || null,
+        enquirerQuery: data.query || null,
+        enquiryDate: data.date || null,
+        // If you have a course select with ID, map it; else send null
+        courseId: null,
+        // Defaults on creation
+        enquiryProcessedFlag: false,
+        enquiryCounter: 0,
+      };
+
       const res = await fetch("http://localhost:8080/api/enquiries", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
@@ -44,7 +63,8 @@ export default function EnquiryForm() {
         reset();
         setValue("staff", currentAdmin);
       } else {
-        toast.error("Failed to save enquiry.");
+        const errText = await res.text();
+        toast.error(errText || "Failed to save enquiry.");
       }
     } catch (error) {
       toast.error("Something went wrong.");

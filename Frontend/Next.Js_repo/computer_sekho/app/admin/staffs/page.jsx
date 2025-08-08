@@ -14,7 +14,12 @@ const ManageStaffPage = () => {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/staff'); // <-- Replace with actual API endpoint
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:8080/api/staff', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }); // <-- Replace with actual API endpoint
         if (!res.ok) throw new Error('Failed to fetch');
         const data = await res.json();
         setStaffList(data);
@@ -34,8 +39,12 @@ const ManageStaffPage = () => {
     if (!confirm) return;
 
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:8080/api/staff/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (!res.ok) throw new Error('Delete failed');

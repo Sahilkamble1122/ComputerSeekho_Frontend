@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 export default function EnquiryForm() {
   const params = useParams();
   const enquiryId = params?.id;
+  const router = useRouter();
 
   const initialFormState = {
     name: "",
@@ -30,6 +31,8 @@ export default function EnquiryForm() {
     batchId: "",
     courseFee: "",
     pendingFees: "",
+    paymentTypeId: "",
+    initialPayment: "",
   };
 
   const [form, setForm] = useState(initialFormState);
@@ -41,12 +44,14 @@ export default function EnquiryForm() {
   const [courseError, setCourseError] = useState("");
   const [batchError, setBatchError] = useState("");
   const [selectedBatch, setSelectedBatch] = useState(null);
+  const [paymentTypes, setPaymentTypes] = useState([]);
 
   const getToken = () => localStorage.getItem("token");
 
   useEffect(() => {
     fetchCourses();
     fetchBatches();
+    fetchPaymentTypes();
     if (enquiryId) {
       fetchEnquiryData(enquiryId);
     }
@@ -135,6 +140,28 @@ export default function EnquiryForm() {
     }
   };
 
+  const fetchPaymentTypes = async () => {
+    try {
+      const token = getToken();
+      if (!token) throw new Error("Missing authentication token");
+
+      const res = await fetch("http://localhost:8080/api/payment-types", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setPaymentTypes(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch payment types:", error);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -147,6 +174,15 @@ export default function EnquiryForm() {
           pendingFees: selected.courseFee,
         }));
       }
+    }
+    if (name === "initialPayment") {
+      const paymentAmount = parseFloat(value) || 0;
+      const courseFee = parseFloat(form.courseFee) || 0;
+      const newPendingFees = Math.max(0, courseFee - paymentAmount);
+      setForm((prev) => ({
+        ...prev,
+        pendingFees: newPendingFees,
+      }));
     }
   };
 
@@ -229,9 +265,48 @@ export default function EnquiryForm() {
         throw new Error(errorText || "Failed to register student");
       }
 
-      alert("✅ Student registered successfully!");
+      const studentResult = await response.json();
+      const studentId = studentResult.id || studentResult.studentId;
+
+      // Process initial payment if provided
+      if (form.initialPayment && parseFloat(form.initialPayment) > 0 && form.paymentTypeId) {
+        try {
+          const paymentResponse = await fetch('/api/payments/process', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              studentId: studentId,
+              paymentTypeId: parseInt(form.paymentTypeId),
+              paymentDate: form.paymentDate || new Date().toISOString().split('T')[0],
+              courseId: parseInt(form.course),
+              batchId: parseInt(form.batchId),
+              amount: parseFloat(form.initialPayment),
+              status: 'Successful'
+            }),
+          });
+
+          const paymentResult = await paymentResponse.json();
+          if (paymentResult.success) {
+            alert("✅ Student registered successfully with initial payment!");
+          } else {
+            alert("✅ Student registered successfully! (Payment processing failed: " + paymentResult.error + ")");
+          }
+        } catch (paymentError) {
+          alert("✅ Student registered successfully! (Payment processing failed: " + paymentError.message + ")");
+        }
+      } else {
+        alert("✅ Student registered successfully!");
+      }
+
       setForm(initialFormState);
       setPreview(null);
+      // Redirect to initial payment page for this student
+      if (studentId) {
+        router.push(`/admin/payments/${studentId}/new-payment`);
+      }
     } catch (error) {
       alert("❌ Registration failed: " + error.message);
     }
@@ -485,6 +560,63 @@ export default function EnquiryForm() {
           )}
           {batchError && <p className="text-red-600 text-sm">{batchError}</p>}
         </div>
+
+        {/* Payment Section */}
+        {form.courseFee && (
+          <div className="space-y-4 border-t pt-4">
+            <h3 className="text-lg font-semibold text-gray-800">Initial Payment (Optional)</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-semibold mb-1">Payment Type:</label>
+                <select
+                  name="paymentTypeId"
+                  value={form.paymentTypeId}
+                  onChange={handleChange}
+                  className="input"
+                >
+                  <option value="">-- Select Payment Type --</option>
+                  {paymentTypes.map((type) => (
+                    <option key={type.paymentTypeId} value={type.paymentTypeId}>
+                      {type.paymentTypeDesc || `Payment Type ${type.paymentTypeId}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold mb-1">Initial Payment Amount:</label>
+                <input
+                  type="number"
+                  name="initialPayment"
+                  value={form.initialPayment}
+                  onChange={handleChange}
+                  max={form.courseFee}
+                  min="0"
+                  step="0.01"
+                  className="input"
+                  placeholder="Enter amount"
+                />
+                {form.initialPayment && (
+                  <p className="text-sm text-blue-600 mt-1">
+                    Remaining Fees: ₹{form.pendingFees}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-semibold mb-1">Payment Date:</label>
+              <input
+                type="date"
+                name="paymentDate"
+                value={form.paymentDate}
+                onChange={handleChange}
+                className="input"
+              />
+            </div>
+          </div>
+        )}
 
         <button
           type="submit"

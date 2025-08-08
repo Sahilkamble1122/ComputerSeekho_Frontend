@@ -23,7 +23,12 @@ const StudentPaymentDashboard = () => {
         setLoading(true);
         
         // Fetch student details
-        const studentResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS));
+        const token = localStorage.getItem('token');
+        const studentResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS), {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         const studentData = await studentResponse.json();
         
         let students = [];
@@ -40,20 +45,22 @@ const StudentPaymentDashboard = () => {
           toast.error('Student not found');
         }
         
-        // Fetch payment history for this student
-        const historyResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PAYMENT_HISTORY));
-        const historyData = await historyResponse.json();
+        // Fetch payment history using our new API route
+        const token = localStorage.getItem('token');
+        const historyResponse = await fetch(`/api/payments/history?studentId=${studentId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         
-        let allReceipts = [];
-        if (Array.isArray(historyData)) {
-          allReceipts = historyData;
-        } else if (historyData.success && historyData.data) {
-          allReceipts = historyData.data;
+        if (historyResponse.ok) {
+          const result = await historyResponse.json();
+          setPaymentHistory(result.data || []);
+        } else {
+          console.error('Failed to fetch payment history');
+          setPaymentHistory([]);
         }
-        
-        // Filter receipts for this student (assuming receipt has studentId or paymentId that links to student)
-        const studentHistory = allReceipts.filter(receipt => receipt.studentId == studentId);
-        setPaymentHistory(studentHistory);
         
       } catch (error) {
         console.error('Error fetching student data:', error);

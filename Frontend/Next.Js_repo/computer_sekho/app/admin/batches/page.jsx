@@ -30,7 +30,10 @@ export default function BatchPage() {
 
   const fetchCourses = async () => {
     try {
-      const res = await fetch(`${API}/courses`);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API}/courses`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
       setCourses(data);
     } catch (err) {
@@ -40,7 +43,10 @@ export default function BatchPage() {
 
   const fetchBatches = async () => {
     try {
-      const res = await fetch(`${API}/batches`);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API}/batches`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
       setBatches(data);
     } catch (err) {
@@ -51,8 +57,10 @@ export default function BatchPage() {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this batch?")) {
       try {
+        const token = localStorage.getItem('token');
         const res = await fetch(`${API}/batches/${id}`, {
           method: "DELETE",
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
           alert("✅ Batch deleted successfully");
@@ -85,10 +93,12 @@ export default function BatchPage() {
       : `${API}/batches`;
 
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(form),
       });

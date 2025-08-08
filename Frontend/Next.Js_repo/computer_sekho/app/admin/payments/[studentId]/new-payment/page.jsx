@@ -32,7 +32,12 @@ const NewPaymentPage = () => {
         setLoading(true);
         
         // Fetch student
-        const studentResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS));
+        const token = localStorage.getItem('token');
+        const studentResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS), {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         const studentData = await studentResponse.json();
         
         let students = [];
@@ -51,7 +56,11 @@ const NewPaymentPage = () => {
         }
         
         // Fetch payment types
-        const typesResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PAYMENT_TYPES));
+        const typesResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PAYMENT_TYPES), {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         const typesData = await typesResponse.json();
         
         let types = [];
@@ -91,10 +100,19 @@ const NewPaymentPage = () => {
 
     try {
       setProcessing(true);
-      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROCESS_PAYMENT), {
+      
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Authentication required. Please login again.');
+        return;
+      }
+
+      const response = await fetch('/api/payments/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           studentId: student.id,
@@ -109,11 +127,16 @@ const NewPaymentPage = () => {
 
       const result = await response.json();
 
-      if (result.paymentId) {
+      if (result.success) {
         toast.success('Payment processed successfully!');
+        // Update the student's pending fees in the UI
+        setStudent(prev => ({
+          ...prev,
+          pendingFees: result.newPendingFees
+        }));
         router.push(`/admin/payments/${studentId}`);
       } else {
-        toast.error('Failed to process payment');
+        toast.error(result.error || 'Failed to process payment');
       }
     } catch (error) {
       console.error('Error processing payment:', error);

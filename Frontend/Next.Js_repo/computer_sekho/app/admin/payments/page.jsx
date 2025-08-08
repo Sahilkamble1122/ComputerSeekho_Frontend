@@ -18,7 +18,12 @@ const PaymentsPage = () => {
     const fetchStudents = async () => {
       try {
         setLoading(true);
-        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS));
+        const token = localStorage.getItem('token');
+        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS), {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         const data = await response.json();
         
         // Handle array response directly
