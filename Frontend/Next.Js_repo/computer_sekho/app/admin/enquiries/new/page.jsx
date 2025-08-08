@@ -114,8 +114,9 @@ export default function EnquiryForm() {
   // Set default values when data is loaded
   useEffect(() => {
     if (currentAdmin) {
-      setValue("staff", currentAdmin);
+      setValue("assignedStaffId", currentAdmin);
     }
+    setValue("enquiryDate", new Date().toISOString().split("T")[0]);
   }, [currentAdmin, setValue]);
 
   const onSubmit = async (data) => {
@@ -261,12 +262,11 @@ export default function EnquiryForm() {
                 <h2 className="text-2xl font-semibold text-gray-800 mb-6">
                   New Enquiry
                 </h2>
-
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="name">Enquirer Name *</Label>
                     <Input
-                      id="name"
+                      id="enquirerName"
                       placeholder="Enter name"
                       {...register("name", { 
                         required: "Enquirer name is required" 
@@ -281,7 +281,7 @@ export default function EnquiryForm() {
                   <div>
                     <Label htmlFor="student_name">Student Name *</Label>
                     <Input
-                      id="student_name"
+                      id="studentName"
                       placeholder="Enter student name"
                       {...register("student_name", { 
                         required: "Student name is required" 
@@ -296,7 +296,7 @@ export default function EnquiryForm() {
                   <div>
                     <Label htmlFor="email">Email *</Label>
                     <Input
-                      id="email"
+                      id="enquirerEmailId"
                       type="email"
                       placeholder="Enter email"
                       {...register("email", { 
@@ -316,7 +316,7 @@ export default function EnquiryForm() {
                   <div>
                     <Label htmlFor="mobile">Mobile *</Label>
                     <Input
-                      id="mobile"
+                      id="enquirerMobile"
                       type="tel"
                       placeholder="Enter mobile number"
                       {...register("mobile", {
@@ -334,9 +334,9 @@ export default function EnquiryForm() {
                   </div>
 
                   <div>
-                    <Label htmlFor="alt_mobile">Alternate Mobile</Label>
+                    <Label htmlFor="enquirerAlternateMobile">Alternate Mobile</Label>
                     <Input
-                      id="alt_mobile"
+                      id="enquirerAlternateMobile"
                       type="tel"
                       placeholder="Alternate number"
                       {...register("alt_mobile", {
@@ -353,11 +353,11 @@ export default function EnquiryForm() {
                   </div>
 
                   <div>
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="enquirerAddress">Address</Label>
                     <Textarea
-                      id="address"
+                      id="enquirerAddress"
                       placeholder="Enter address"
-                      {...register("address")}
+                      {...register("enquirerAddress")}
                       className="mt-1"
                     />
                   </div>
@@ -371,7 +371,7 @@ export default function EnquiryForm() {
                 <div>
                   <Label htmlFor="query">Enquiry Query *</Label>
                   <Textarea
-                    id="query"
+                    id="enquirerQuery"
                     placeholder="Enter query"
                     {...register("query", { 
                       required: "Enquiry query is required" 
@@ -414,7 +414,7 @@ export default function EnquiryForm() {
                 <div>
                   <Label htmlFor="date">Enquiry Date *</Label>
                   <Input
-                    id="date"
+                    id="enquiryDate"
                     type="date"
                     {...register("date", { 
                       required: "Enquiry date is required" 
@@ -439,7 +439,7 @@ export default function EnquiryForm() {
                 <div>
                   <Label htmlFor="staff">Assigned Staff</Label>
                   <Input
-                    id="staff"
+                    id="assignedStaffId"
                     value={currentAdmin}
                     {...register("staff")}
                     className="mt-1"
@@ -448,7 +448,6 @@ export default function EnquiryForm() {
                 </div>
               </div>
 
-              {/* Submit Button */}
               <div className="flex justify-end pt-6">
                 <Button type="submit" disabled={loading}>
                   {loading ? "Saving..." : "Save Enquiry"}
@@ -456,7 +455,7 @@ export default function EnquiryForm() {
               </div>
             </div>
           </CardContent>
-        </form>
+          </form>
       </Card>
     </div>
   );

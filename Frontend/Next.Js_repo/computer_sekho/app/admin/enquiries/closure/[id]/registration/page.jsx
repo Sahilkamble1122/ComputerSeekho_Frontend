@@ -29,7 +29,7 @@ export default function EnquiryForm() {
     paymentDate: "",
     photo: null,
     batchId: "",
-    courseFee: "",
+    courseFees: "",
     pendingFees: "",
     paymentTypeId: "",
     initialPayment: "",
@@ -170,14 +170,14 @@ export default function EnquiryForm() {
       if (selected) {
         setForm((prev) => ({
           ...prev,
-          courseFee: selected.courseFee,
-          pendingFees: selected.courseFee,
+          courseFees: selected.courseFees,
+          pendingFees: selected.courseFees,
         }));
       }
     }
     if (name === "initialPayment") {
       const paymentAmount = parseFloat(value) || 0;
-      const courseFee = parseFloat(form.courseFee) || 0;
+      const courseFee = parseFloat(form.courseFees) || 0;
       const newPendingFees = Math.max(0, courseFee - paymentAmount);
       setForm((prev) => ({
         ...prev,
@@ -209,8 +209,8 @@ export default function EnquiryForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    form.courseFee = selectedBatch?.courseFee || 0;
-    form.pendingFees = form.courseFee;
+    form.courseFees = selectedBatch?.courseFees || 0;
+    form.pendingFees = form.courseFees;
     if (!validateForm()) {
       alert("❌ Please correct the errors before submitting.");
       return;
@@ -246,16 +246,16 @@ export default function EnquiryForm() {
         studentPassword: "pass123",
         studentUsername: form.email,
         batchId: parseInt(form.batchId),
-        courseFee: parseFloat(form.courseFee),
+        courseFee: parseFloat(form.courseFees),
         pendingFees: parseFloat(form.pendingFees),
-        photo: photoBase64
+        photo: photoBase64,
       };
 
       const response = await fetch("http://localhost:8080/api/students", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(studentData),
       });
@@ -269,22 +269,27 @@ export default function EnquiryForm() {
       const studentId = studentResult.id || studentResult.studentId;
 
       // Process initial payment if provided
-      if (form.initialPayment && parseFloat(form.initialPayment) > 0 && form.paymentTypeId) {
+      if (
+        form.initialPayment &&
+        parseFloat(form.initialPayment) > 0 &&
+        form.paymentTypeId
+      ) {
         try {
-          const paymentResponse = await fetch('/api/payments/process', {
-            method: 'POST',
+          const paymentResponse = await fetch("/api/payments/process", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
               studentId: studentId,
               paymentTypeId: parseInt(form.paymentTypeId),
-              paymentDate: form.paymentDate || new Date().toISOString().split('T')[0],
+              paymentDate:
+                form.paymentDate || new Date().toISOString().split("T")[0],
               courseId: parseInt(form.course),
               batchId: parseInt(form.batchId),
               amount: parseFloat(form.initialPayment),
-              status: 'Successful'
+              status: "Successful",
             }),
           });
 
@@ -292,10 +297,18 @@ export default function EnquiryForm() {
           if (paymentResult.success) {
             alert("✅ Student registered successfully with initial payment!");
           } else {
-            alert("✅ Student registered successfully! (Payment processing failed: " + paymentResult.error + ")");
+            alert(
+              "✅ Student registered successfully! (Payment processing failed: " +
+                paymentResult.error +
+                ")"
+            );
           }
         } catch (paymentError) {
-          alert("✅ Student registered successfully! (Payment processing failed: " + paymentError.message + ")");
+          alert(
+            "✅ Student registered successfully! (Payment processing failed: " +
+              paymentError.message +
+              ")"
+          );
         }
       } else {
         alert("✅ Student registered successfully!");
@@ -534,8 +547,8 @@ export default function EnquiryForm() {
               setForm((prevForm) => ({
                 ...prevForm,
                 batchId: e.target.value,
-                courseFee: selected?.courseFee || 0,
-                pendingFees: selected?.courseFee || 0,
+                courseFees: selected?.courseFees || 0,
+                pendingFees: selected?.courseFees || 0,
               }));
               setSelectedBatch(selected); // <- define this in useState
             }}
@@ -549,9 +562,9 @@ export default function EnquiryForm() {
               </option>
             ))}
           </select>
-          {form.courseFee && (
+          {form.courseFees && (
             <p className="text-sm text-green-600 mt-1">
-              Total Fees: ₹{form.courseFee}
+              Total Fees: ₹{form.courseFees}
             </p>
           )}
 
@@ -562,13 +575,17 @@ export default function EnquiryForm() {
         </div>
 
         {/* Payment Section */}
-        {form.courseFee && (
+        {form.courseFees && (
           <div className="space-y-4 border-t pt-4">
-            <h3 className="text-lg font-semibold text-gray-800">Initial Payment (Optional)</h3>
-            
+            <h3 className="text-lg font-semibold text-gray-800">
+              Initial Payment (Optional)
+            </h3>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block font-semibold mb-1">Payment Type:</label>
+                <label className="block font-semibold mb-1">
+                  Payment Type:
+                </label>
                 <select
                   name="paymentTypeId"
                   value={form.paymentTypeId}
@@ -578,20 +595,23 @@ export default function EnquiryForm() {
                   <option value="">-- Select Payment Type --</option>
                   {paymentTypes.map((type) => (
                     <option key={type.paymentTypeId} value={type.paymentTypeId}>
-                      {type.paymentTypeDesc || `Payment Type ${type.paymentTypeId}`}
+                      {type.paymentTypeDesc ||
+                        `Payment Type ${type.paymentTypeId}`}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block font-semibold mb-1">Initial Payment Amount:</label>
+                <label className="block font-semibold mb-1">
+                  Initial Payment Amount:
+                </label>
                 <input
                   type="number"
                   name="initialPayment"
                   value={form.initialPayment}
                   onChange={handleChange}
-                  max={form.courseFee}
+                  max={form.courseFees}
                   min="0"
                   step="0.01"
                   className="input"
