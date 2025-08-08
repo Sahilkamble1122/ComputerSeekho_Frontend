@@ -36,22 +36,22 @@ export default function ManagePlacementsPage() {
   const pageSize = 5;
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     fetch("http://localhost:8080/api/courses", {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
       .then((data) => setCourses(data));
 
     fetch("http://localhost:8080/api/batches/active", {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
       .then((data) => setBatches(data));
 
     // ✅ Fetch all students once
     fetch("http://localhost:8080/api/students", {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
       .then((data) => setStudents(data))
@@ -82,15 +82,41 @@ export default function ManagePlacementsPage() {
     setPage(1);
   }, [selectedCourse, selectedBatch, searchQuery, students]);
 
+  // const handlePlacementToggle = async (studentId, isPlaced) => {
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     const res = await fetch(`/api/students/${studentId}/placement`, {
+  //       method: "PUT",
+  //       headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${token}` },
+  //       body: JSON.stringify({ isPlaced: isPlaced }),
+  //     });
+  //     if (!res.ok) throw new Error();
+  //     toast({ title: "Placement status updated" });
+  //   } catch (error) {
+  //     toast({ title: "Failed to update placement status" });
+  //   }
+  // };
   const handlePlacementToggle = async (studentId, isPlaced) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/students/${studentId}/placement`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ isPlaced: isPlaced }),
-      });
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `http://localhost:8080/api/students/${studentId}/placement`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ isPlaced }),
+        }
+      );
       if (!res.ok) throw new Error();
+
+      // ✅ Local state update so UI updates instantly
+      setStudents((prev) =>
+        prev.map((s) => (s.studentId === studentId ? { ...s, isPlaced } : s))
+      );
+
       toast({ title: "Placement status updated" });
     } catch (error) {
       toast({ title: "Failed to update placement status" });
