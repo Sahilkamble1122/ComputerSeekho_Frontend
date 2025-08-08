@@ -26,14 +26,32 @@ const PaymentsPage = () => {
         });
         const data = await response.json();
         
-        // Handle array response directly
+        // Normalize to expected UI shape
+        const toUiStudent = (s) => ({
+          id: s.id ?? s.studentId ?? s.student_id,
+          name: s.name ?? s.studentName,
+          email: s.email ?? s.studentEmail,
+          phone: s.phone ?? s.studentMobile,
+          course: s.course ?? s.courseName ?? (s.courseId ? `Course ${s.courseId}` : ''),
+          batch: s.batch ?? s.batchName ?? (s.batchId ? `Batch ${s.batchId}` : ''),
+          totalFees: s.totalFees ?? s.courseFee ?? 0,
+          pendingFees: s.pendingFees ?? (s.courseFee ?? 0),
+          courseId: s.courseId,
+          batchId: s.batchId,
+        });
+
+        let studentsArr = [];
         if (Array.isArray(data)) {
-          setStudents(data);
-        } else if (data.success && data.data) {
-          setStudents(data.data);
+          studentsArr = data.map(toUiStudent);
+        } else if (data.success && Array.isArray(data.data)) {
+          studentsArr = data.data.map(toUiStudent);
+        }
+
+        if (studentsArr.length > 0) {
+          setStudents(studentsArr);
         } else {
           setStudents([]);
-          toast.error('Failed to fetch students');
+          toast.error('No students found');
         }
       } catch (error) {
         console.error('Error fetching students:', error);

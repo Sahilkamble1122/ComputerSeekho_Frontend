@@ -31,14 +31,27 @@ const PaymentHistoryPage = () => {
         });
         const studentData = await studentResponse.json();
         
+        const toUiStudent = (s) => ({
+          id: s.id ?? s.studentId ?? s.student_id,
+          name: s.name ?? s.studentName,
+          email: s.email ?? s.studentEmail,
+          phone: s.phone ?? s.studentMobile,
+          course: s.course ?? s.courseName ?? (s.courseId ? `Course ${s.courseId}` : ''),
+          batch: s.batch ?? s.batchName ?? (s.batchId ? `Batch ${s.batchId}` : ''),
+          totalFees: s.totalFees ?? s.courseFee ?? 0,
+          pendingFees: s.pendingFees ?? (s.courseFee ?? 0),
+          courseId: s.courseId,
+          batchId: s.batchId,
+        });
+
         let students = [];
         if (Array.isArray(studentData)) {
-          students = studentData;
+          students = studentData.map(toUiStudent);
         } else if (studentData.success && studentData.data) {
-          students = studentData.data;
+          students = studentData.data.map(toUiStudent);
         }
         
-        const foundStudent = students.find(s => s.id == studentId);
+        const foundStudent = students.find(s => String(s.id) === String(studentId));
         if (foundStudent) {
           setStudent(foundStudent);
         } else {
