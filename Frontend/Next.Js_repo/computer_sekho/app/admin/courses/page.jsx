@@ -315,17 +315,7 @@ export default function CoursePage() {
                 className="border p-2 rounded w-full"
               />
             </label>
-
-            <label className="block">
-              <span className="text-gray-700">Video File</span>
-              <input
-                type="file"
-                accept="video/*"
-                onChange={handleVideoChange}
-                className="border p-2 rounded w-full"
-              />
-            </label>
-          </div>
+          </div> 
 
           <label className="block">
             <span className="text-gray-700">Syllabus</span>
