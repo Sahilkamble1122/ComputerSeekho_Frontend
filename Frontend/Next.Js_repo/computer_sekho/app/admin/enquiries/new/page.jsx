@@ -27,8 +27,9 @@ export default function EnquiryForm() {
 
   useEffect(() => {
     if (currentAdmin) {
-      setValue("staff", currentAdmin);
+      setValue("assignedStaffId", currentAdmin);
     }
+    setValue("enquiryDate", new Date().toISOString().split("T")[0]);
   }, [currentAdmin, setValue]);
 
   const onSubmit = async (data) => {
@@ -61,7 +62,8 @@ export default function EnquiryForm() {
       if (res.ok) {
         toast.success("Enquiry saved successfully.");
         reset();
-        setValue("staff", currentAdmin);
+        setValue("assignedStaffId", currentAdmin);
+        setValue("enquiryDate", new Date().toISOString().split("T")[0]);
       } else {
         const errText = await res.text();
         toast.error(errText || "Failed to save enquiry.");
@@ -82,86 +84,75 @@ export default function EnquiryForm() {
                 <h2 className="text-2xl font-semibold text-gray-800 mb-6">
                   New Enquiry
                 </h2>
-
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="name">Enquirer Name</Label>
+                    <Label htmlFor="enquirerName">Enquirer Name</Label>
                     <Input
-                      id="name"
+                      id="enquirerName"
                       placeholder="Enter name"
-                      {...register("name", { required: true })}
+                      {...register("enquirerName", { required: true })}
                       className="mt-1"
                     />
-                    {errors.name && (
-                      <p className="text-red-500 text-sm">Name is required.</p>
-                    )}
+                    {errors.enquirerName && <p className="text-red-500 text-sm">Name is required.</p>}
                   </div>
 
                   <div>
-                    <Label htmlFor="student_name">Student Name</Label>
+                    <Label htmlFor="studentName">Student Name</Label>
                     <Input
-                      id="student_name"
+                      id="studentName"
                       placeholder="Enter student name"
-                      {...register("student_name", { required: true })}
+                      {...register("studentName", { required: true })}
                       className="mt-1"
                     />
-                    {errors.student_name && (
-                      <p className="text-red-500 text-sm">
-                        Student Name is required.
-                      </p>
-                    )}
+                    {errors.studentName && <p className="text-red-500 text-sm">Student Name is required.</p>}
                   </div>
 
                   <div>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="enquirerEmailId">Email</Label>
                     <Input
-                      id="email"
+                      id="enquirerEmailId"
                       type="email"
                       placeholder="Enter email"
-                      {...register("email", { required: true })}
+                      {...register("enquirerEmailId", { required: true })}
                       className="mt-1"
                     />
-                    {errors.email && (
-                      <p className="text-red-500 text-sm">Email is required.</p>
-                    )}
+                    {errors.enquirerEmailId && <p className="text-red-500 text-sm">Email is required.</p>}
                   </div>
 
                   <div>
-                    <Label htmlFor="mobile">Mobile</Label>
+                    <Label htmlFor="enquirerMobile">Mobile</Label>
                     <Input
-                      id="mobile"
+                      id="enquirerMobile"
                       type="tel"
                       placeholder="Enter mobile number"
-                      {...register("mobile", {
+                      {...register("enquirerMobile", {
                         required: true,
                         pattern: /^\d{10}$/,
                       })}
                       className="mt-1"
                     />
-                    {errors.mobile && (
-                      <p className="text-red-500 text-sm">
-                        Enter a valid 10-digit mobile number.
-                      </p>
+                    {errors.enquirerMobile && (
+                      <p className="text-red-500 text-sm">Enter a valid 10-digit mobile number.</p>
                     )}
                   </div>
 
                   <div>
-                    <Label htmlFor="alt_mobile">Alternate Mobile</Label>
+                    <Label htmlFor="enquirerAlternateMobile">Alternate Mobile</Label>
                     <Input
-                      id="alt_mobile"
+                      id="enquirerAlternateMobile"
                       type="tel"
                       placeholder="Alternate number"
-                      {...register("alt_mobile")}
+                      {...register("enquirerAlternateMobile")}
                       className="mt-1"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="enquirerAddress">Address</Label>
                     <Textarea
-                      id="address"
+                      id="enquirerAddress"
                       placeholder="Enter address"
-                      {...register("address")}
+                      {...register("enquirerAddress")}
                       className="mt-1"
                     />
                   </div>
@@ -173,66 +164,57 @@ export default function EnquiryForm() {
             <div className="flex flex-col justify-between space-y-6">
               <div className="space-y-4 pt-10 md:pt-0">
                 <div>
-                  <Label htmlFor="query">Enquiry Query</Label>
+                  <Label htmlFor="enquirerQuery">Enquiry Query</Label>
                   <Textarea
-                    id="query"
+                    id="enquirerQuery"
                     placeholder="Enter query"
-                    {...register("query", { required: true })}
+                    {...register("enquirerQuery", { required: true })}
                     className="mt-1"
                   />
-                  {errors.query && (
-                    <p className="text-red-500 text-sm">Query is required.</p>
-                  )}
+                  {errors.enquirerQuery && <p className="text-red-500 text-sm">Query is required.</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="course">Course</Label>
+                  <Label htmlFor="courseId">Course ID</Label>
                   <Input
-                    id="course"
-                    placeholder="Course interested in"
-                    {...register("course", { required: true })}
+                    id="courseId"
+                    placeholder="Enter Course ID (e.g., 101)"
+                    {...register("courseId", { required: true })}
                     className="mt-1"
                   />
-                  {errors.course && (
-                    <p className="text-red-500 text-sm">Course is required.</p>
-                  )}
+                  {errors.courseId && <p className="text-red-500 text-sm">Course is required.</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="date">Enquiry Date</Label>
+                  <Label htmlFor="enquiryDate">Enquiry Date</Label>
                   <Input
-                    id="date"
+                    id="enquiryDate"
                     type="date"
-                    {...register("date", { required: true })}
+                    {...register("enquiryDate", { required: true })}
                     className="mt-1"
                   />
-                  {errors.date && (
-                    <p className="text-red-500 text-sm">Date is required.</p>
-                  )}
+                  {errors.enquiryDate && <p className="text-red-500 text-sm">Date is required.</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="staff">Assigned Staff</Label>
+                  <Label htmlFor="assignedStaffId">Assigned Staff</Label>
                   <Input
-                    id="staff"
+                    id="assignedStaffId"
                     value={currentAdmin}
-                    {...register("staff", { required: true })}
+                    {...register("assignedStaffId", { required: true })}
                     className="mt-1"
                     disabled
                   />
-                  {errors.staff && (
-                    <p className="text-red-500 text-sm">Staff is required.</p>
-                  )}
+                  {errors.assignedStaffId && <p className="text-red-500 text-sm">Staff is required.</p>}
                 </div>
               </div>
 
-              {/* Submit Button */}
               <div className="flex justify-end pt-6">
                 <Button type="submit">Save Enquiry</Button>
               </div>
             </div>
           </CardContent>
-        </form>
+          </form>
       </Card>
     </div>
   );
