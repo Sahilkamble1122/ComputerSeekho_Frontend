@@ -7,7 +7,6 @@ export default function Faculty() {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
 
-
   useEffect(() => {
     const fetchStaff = async () => {
       try {
@@ -23,6 +22,26 @@ export default function Faculty() {
 
     fetchStaff();
   }, []);
+
+  // Helper function to validate and get image URL
+  const getImageUrl = (photoUrl) => {
+    if (!photoUrl || photoUrl === "null" || photoUrl === "undefined" || photoUrl.trim() === "") {
+      return "/default-profile.png";
+    }
+    
+    // If it's already a full URL, return as is
+    if (photoUrl.startsWith("http://") || photoUrl.startsWith("https://")) {
+      return photoUrl;
+    }
+    
+    // If it's a relative path, ensure it starts with /
+    if (photoUrl.startsWith("/")) {
+      return photoUrl;
+    }
+    
+    // If it's a relative path without leading slash, add it
+    return `/${photoUrl}`;
+  };
 
   return (
     <section className="py-12 pt-[150px]">
@@ -46,13 +65,13 @@ export default function Faculty() {
               className="relative w-full max-w-6xl mx-auto rounded-md overflow-hidden"
             >
               <Image
-                src={faculty.photoUrl || "/default.jpg"}
+                src={getImageUrl(faculty.photoUrl)}
                 alt={faculty.staffName ? faculty.staffName : "Faculty Photo"}
                 width={1200}
                 height={600}
                 className="w-full h-auto object-cover"
                 priority={index === 0}
-                // unoptimized
+                unoptimized={true}
               />
               <div className="absolute top-1/2 right-0 w-full md:w-[40%] bg-red-500/70 text-white rounded-l-xl p-6 md:p-8 shadow-lg">
                 <h3 className="text-2xl font-bold mb-2 font-[cursive]">
