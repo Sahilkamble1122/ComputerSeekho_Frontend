@@ -1,26 +1,27 @@
-'use client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+// app/staff-register/page.jsx
+"use client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { useState } from 'react';
+} from "@/components/ui/select";
+import { useState } from "react";
 
 export default function StaffRegister() {
   const [formData, setFormData] = useState({
-    staff_name: '',
-    photo_url: '',
-    staff_mobile: '',
-    staff_email: '',
-    staff_username: '',
-    staff_password: '',
-    staff_role: '',
+    staff_name: "",
+    photo_url: "",
+    staff_mobile: "",
+    staff_email: "",
+    staff_username: "",
+    staff_password: "",
+    staff_role: "",
   });
 
   const handleChange = (e) => {
@@ -31,11 +32,20 @@ export default function StaffRegister() {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData((prev) => ({ ...prev, photo_url: reader.result }));
-    };
-    reader.readAsDataURL(file); // convert image to Base64
+    const uploadData = new FormData();
+    uploadData.append("file", file);
+
+    const res = await fetch("/api/staff/upload", {
+      method: "POST",
+      body: uploadData,
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      setFormData((prev) => ({ ...prev, photo_url: data.filePath }));
+    } else {
+      alert("Photo upload failed");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -54,29 +64,32 @@ export default function StaffRegister() {
         updatedDate: new Date().toISOString(),
       };
 
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:8080/api/staff', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:8080/api/staff", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        alert('Staff registered successfully.');
+        alert("Staff registered successfully.");
         setFormData({
-          staff_name: '',
-          photo_url: '',
-          staff_mobile: '',
-          staff_email: '',
-          staff_username: '',
-          staff_password: '',
-          staff_role: '',
+          staff_name: "",
+          photo_url: "",
+          staff_mobile: "",
+          staff_email: "",
+          staff_username: "",
+          staff_password: "",
+          staff_role: "",
         });
       } else {
-        alert('Failed to register staff.');
+        alert("Failed to register staff.");
       }
     } catch (error) {
-      alert('Something went wrong.');
+      alert("Something went wrong.");
     }
   };
 
@@ -84,13 +97,14 @@ export default function StaffRegister() {
     <div className="min-h-screen flex items-center justify-center bg-muted p-6">
       <Card className="w-full max-w-2xl border shadow-md">
         <CardContent className="p-8">
-          <h2 className="text-2xl font-bold text-center mb-4">Staff Registration</h2>
+          <h2 className="text-2xl font-bold text-center mb-4">
+            Staff Registration
+          </h2>
           <p className="text-sm text-muted-foreground text-center mb-6">
             Fill out the form below to register a new staff member.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Full Name */}
             <div>
               <Label htmlFor="staff_name">Full Name</Label>
               <Input
@@ -103,7 +117,6 @@ export default function StaffRegister() {
               />
             </div>
 
-            {/* Photo Upload */}
             <div>
               <Label htmlFor="photo_url">Upload Photo</Label>
               <Input
@@ -122,7 +135,6 @@ export default function StaffRegister() {
               )}
             </div>
 
-            {/* Mobile */}
             <div>
               <Label htmlFor="staff_mobile">Mobile Number</Label>
               <Input
@@ -136,7 +148,6 @@ export default function StaffRegister() {
               />
             </div>
 
-            {/* Email */}
             <div>
               <Label htmlFor="staff_email">Email Address</Label>
               <Input
@@ -150,7 +161,6 @@ export default function StaffRegister() {
               />
             </div>
 
-            {/* Username */}
             <div>
               <Label htmlFor="staff_username">Username</Label>
               <Input
@@ -163,7 +173,6 @@ export default function StaffRegister() {
               />
             </div>
 
-            {/* Password */}
             <div>
               <Label htmlFor="staff_password">Password</Label>
               <Input
@@ -177,7 +186,6 @@ export default function StaffRegister() {
               />
             </div>
 
-            {/* Staff Role */}
             <div>
               <Label htmlFor="staff_role">Role</Label>
               <Select
@@ -207,3 +215,4 @@ export default function StaffRegister() {
     </div>
   );
 }
+
