@@ -30,9 +30,9 @@ export default function BatchPage() {
 
   const fetchCourses = async () => {
     try {
-      const token = sessionStorage.getItem('token');
+      const token = sessionStorage.getItem("token");
       const res = await fetch(`${API}/courses`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setCourses(data);
@@ -43,9 +43,9 @@ export default function BatchPage() {
 
   const fetchBatches = async () => {
     try {
-      const token = sessionStorage.getItem('token');
+      const token = sessionStorage.getItem("token");
       const res = await fetch(`${API}/batches`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setBatches(data);
@@ -57,10 +57,10 @@ export default function BatchPage() {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this batch?")) {
       try {
-        const token = sessionStorage.getItem('token');
+        const token = sessionStorage.getItem("token");
         const res = await fetch(`${API}/batches/${id}`, {
           method: "DELETE",
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
           alert("✅ Batch deleted successfully");
@@ -93,12 +93,12 @@ export default function BatchPage() {
       : `${API}/batches`;
 
     try {
-      const token = sessionStorage.getItem('token');
+      const token = sessionStorage.getItem("token");
       const res = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(form),
       });
@@ -238,7 +238,7 @@ export default function BatchPage() {
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                 (page) => (
                   <button
-                    key={page}
+                    key={`page-${page}`} // ✅ unique key
                     onClick={() => setCurrentPage(page)}
                     className={`px-3 py-1 rounded ${
                       page === currentPage
