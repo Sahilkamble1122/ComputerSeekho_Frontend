@@ -3,22 +3,24 @@ import { useState, useEffect } from "react";
 
 export default function BatchPage() {
   const [form, setForm] = useState({
-    batch_id: null,
-    batch_name: "",
-    batch_start_time: "",
-    batch_end_time: "",
-    course_id: "",
-    presentation_date: "",
-    course_fees: "",
-    course_fees_from: "",
-    course_fees_to: "",
-    batch_is_active: true,
+    batchId: null,
+    batchName: "",
+    batchStartTime: "",
+    batchEndTime: "",
+    courseId: "",
+    presentationDate: "",
+    courseFees: "",
+    courseFeesFrom: "",
+    courseFeesTo: "",
+    batchIsActive: true,
+    batchLogo: "",
   });
 
   const [batches, setBatches] = useState([]);
   const [courses, setCourses] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [batchLogoFile, setBatchLogoFile] = useState(null);
   const batchesPerPage = 5;
   const [showForm, setShowForm] = useState(false);
   const API = "http://localhost:8080/api";
@@ -87,10 +89,40 @@ export default function BatchPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const method = form.batch_id ? "PUT" : "POST";
-    const url = form.batch_id
-      ? `${API}/batches/${form.batch_id}`
+
+    let logoPath = form.batchLogo || "";
+
+    // Agar naya logo select hua hai to upload karo
+    if (batchLogoFile) {
+      const formData = new FormData();
+      formData.append("file", batchLogoFile);
+
+      try {
+        const res = await fetch("/api/uploadBatchLogo", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) throw new Error("Upload failed");
+
+        const data = await res.json();
+        logoPath = data.path;
+      } catch (error) {
+        alert("Logo upload failed. Please try again.");
+        return;
+      }
+    }
+
+    // Batch data ke sath logo path bhejo backend API ko
+    const method = form.batchId ? "PUT" : "POST";
+    const url = form.batchId
+      ? `${API}/batches/${form.batchId}`
       : `${API}/batches`;
+
+    const batchData = {
+      ...form,
+      batchLogo: logoPath,
+    };
 
     try {
       const token = sessionStorage.getItem("token");
@@ -100,25 +132,25 @@ export default function BatchPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(batchData),
       });
 
       if (res.ok) {
-        alert(
-          `✅ Batch ${form.batch_id ? "updated" : "created"} successfully!`
-        );
+        alert(`✅ Batch ${form.batchId ? "updated" : "created"} successfully!`);
         setForm({
-          batch_id: null,
-          batch_name: "",
-          batch_start_time: "",
-          batch_end_time: "",
-          course_id: "",
-          presentation_date: "",
-          course_fees: "",
-          course_fees_from: "",
-          course_fees_to: "",
-          batch_is_active: true,
+          batchId: null,
+          batchName: "",
+          batchStartTime: "",
+          batchEndTime: "",
+          courseId: "",
+          presentationDate: "",
+          courseFees: "",
+          courseFeesFrom: "",
+          courseFeesTo: "",
+          batchIsActive: true,
+          batchLogo: "",
         });
+        setBatchLogoFile(null);
         setShowForm(false);
         fetchBatches();
       } else {
@@ -130,7 +162,7 @@ export default function BatchPage() {
   };
 
   const filteredBatches = batches.filter((batch) =>
-    (batch.batch_name || "").toLowerCase().includes(searchTerm.toLowerCase())
+    (batch.batchName || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const indexOfLastBatch = currentPage * batchesPerPage;
@@ -163,16 +195,16 @@ export default function BatchPage() {
             <button
               onClick={() => {
                 setForm({
-                  batch_id: null,
-                  batch_name: "",
-                  batch_start_time: "",
-                  batch_end_time: "",
-                  course_id: "",
-                  presentation_date: "",
-                  course_fees: "",
-                  course_fees_from: "",
-                  course_fees_to: "",
-                  batch_is_active: true,
+                  batchId: null,
+                  batchName: "",
+                  batchStartTime: "",
+                  batchEndTime: "",
+                  courseId: "",
+                  presentationDate: "",
+                  courseFees: "",
+                  courseFeesFrom: "",
+                  courseFeesTo: "",
+                  batchIsActive: true,
                 });
                 setShowForm(true);
               }}
@@ -202,19 +234,19 @@ export default function BatchPage() {
               </thead>
               <tbody>
                 {currentBatches.map((batch) => (
-                  <tr key={batch.batch_id}>
-                    <td className="border px-4 py-2">{batch.batch_id}</td>
-                    <td className="border px-4 py-2">{batch.batch_name}</td>
+                  <tr key={batch.batchId}>
+                    <td className="border px-4 py-2">{batch.batchId}</td>
+                    <td className="border px-4 py-2">{batch.batchName}</td>
                     <td className="border px-4 py-2">
-                      {batch.batch_start_time} - {batch.batch_end_time}
+                      {batch.batchStartTime} - {batch.batchEndTime}
                     </td>
-                    <td className="border px-4 py-2">{batch.course_id}</td>
-                    <td className="border px-4 py-2">₹{batch.course_fees}</td>
+                    <td className="border px-4 py-2">{batch.courseId}</td>
+                    <td className="border px-4 py-2">₹{batch.courseFees}</td>
                     <td className="border px-4 py-2">
-                      {batch.presentation_date}
+                      {batch.presentationDate}
                     </td>
                     <td className="border px-4 py-2">
-                      {batch.batch_is_active ? "Active" : "Inactive"}
+                      {batch.batchIsActive ? "Active" : "Inactive"}
                     </td>
                     <td className="border px-4 py-2 space-x-2">
                       <button
@@ -224,7 +256,7 @@ export default function BatchPage() {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(batch.batch_id)}
+                        onClick={() => handleDelete(batch.batchId)}
                         className="text-red-600 hover:underline"
                       >
                         Delete
@@ -261,7 +293,7 @@ export default function BatchPage() {
           className="bg-white p-6 rounded shadow space-y-6"
         >
           <h2 className="text-xl font-semibold text-red-600 mb-2">
-            {form.batch_id ? "Edit Batch" : "Create New Batch"}
+            {form.batchId ? "Edit Batch" : "Create New Batch"}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -270,8 +302,8 @@ export default function BatchPage() {
               </label>
               <input
                 type="text"
-                name="batch_name"
-                value={form.batch_name}
+                name="batchName"
+                value={form.batchName}
                 onChange={handleChange}
                 className="border p-2 rounded w-full"
                 required
@@ -283,8 +315,8 @@ export default function BatchPage() {
               </label>
               <input
                 type="time"
-                name="batch_start_time"
-                value={form.batch_start_time}
+                name="batchStartTime"
+                value={form.batchStartTime}
                 onChange={handleChange}
                 className="border p-2 rounded w-full"
                 required
@@ -296,8 +328,8 @@ export default function BatchPage() {
               </label>
               <input
                 type="time"
-                name="batch_end_time"
-                value={form.batch_end_time}
+                name="batchEndTime"
+                value={form.batchEndTime}
                 onChange={handleChange}
                 className="border p-2 rounded w-full"
                 required
@@ -308,8 +340,8 @@ export default function BatchPage() {
                 Course
               </label>
               <select
-                name="course_id"
-                value={form.course_id}
+                name="courseId"
+                value={form.courseId}
                 onChange={handleChange}
                 className="border p-2 rounded w-full"
                 required
@@ -328,8 +360,8 @@ export default function BatchPage() {
               </label>
               <input
                 type="datetime-local"
-                name="presentation_date"
-                value={form.presentation_date}
+                name="presentationDate"
+                value={form.presentationDate}
                 onChange={handleChange}
                 className="border p-2 rounded w-full"
                 required
@@ -341,8 +373,8 @@ export default function BatchPage() {
               </label>
               <input
                 type="number"
-                name="course_fees"
-                value={form.course_fees}
+                name="courseFees"
+                value={form.courseFees}
                 onChange={handleChange}
                 className="border p-2 rounded w-full"
                 required
@@ -354,8 +386,8 @@ export default function BatchPage() {
               </label>
               <input
                 type="date"
-                name="course_fees_from"
-                value={form.course_fees_from}
+                name="courseFeesFrom"
+                value={form.courseFeesFrom}
                 onChange={handleChange}
                 className="border p-2 rounded w-full"
                 required
@@ -363,12 +395,29 @@ export default function BatchPage() {
             </div>
             <div>
               <label className="block mb-1 font-medium text-gray-700">
+                Batch Logo
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setBatchLogoFile(e.target.files[0])}
+              />
+              {form.batchLogo && (
+                <img
+                  src={form.batchLogo}
+                  alt="Batch Logo"
+                  className="mt-2 w-24 h-24 object-contain border"
+                />
+              )}
+            </div>
+            <div>
+              <label className="block mb-1 font-medium text-gray-700">
                 Fees To
               </label>
               <input
                 type="date"
-                name="course_fees_to"
-                value={form.course_fees_to}
+                name="courseFeesTo"
+                value={form.courseFeesTo}
                 onChange={handleChange}
                 className="border p-2 rounded w-full"
                 required
@@ -378,8 +427,8 @@ export default function BatchPage() {
           <div className="flex items-center space-x-2">
             <input
               type="checkbox"
-              name="batch_is_active"
-              checked={form.batch_is_active}
+              name="batchIsActive"
+              checked={form.batchIsActive}
               onChange={handleChange}
               className="accent-red-600"
             />
@@ -389,7 +438,7 @@ export default function BatchPage() {
             type="submit"
             className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700"
           >
-            {form.batch_id ? "Update" : "Submit"}
+            {form.batchId ? "Update" : "Submit"}
           </button>
         </form>
       )}
