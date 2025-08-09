@@ -62,7 +62,7 @@ export default function EnquiryForm() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = sessionStorage.getItem("token");
         
         // Fetch courses
         const coursesResponse = await fetch("http://localhost:8080/api/courses", {
@@ -96,7 +96,7 @@ export default function EnquiryForm() {
 
   // Get current admin from localStorage and find staff ID
   useEffect(() => {
-    const adminName = localStorage.getItem("admin") || "";
+    const adminName = sessionStorage.getItem("admin") || "";
     setCurrentAdmin(adminName);
     
     // Find staff ID by name
@@ -114,9 +114,8 @@ export default function EnquiryForm() {
   // Set default values when data is loaded
   useEffect(() => {
     if (currentAdmin) {
-      setValue("assignedStaffId", currentAdmin);
+      setValue("staff", currentAdmin);
     }
-    setValue("enquiryDate", new Date().toISOString().split("T")[0]);
   }, [currentAdmin, setValue]);
 
   const onSubmit = async (data) => {
@@ -137,7 +136,7 @@ export default function EnquiryForm() {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
 
       if (!token) {
         toast.error("Authentication token not found. Please login again.");
@@ -203,46 +202,7 @@ export default function EnquiryForm() {
         setTimeout(() => {
           router.push("/admin");
         }, 1500);
-      } else {
-        let errorMessage = "Failed to save enquiry.";
-        
-        try {
-          const errorText = await res.text();
-          console.log("Error response text:", errorText);
-          console.log("Error response length:", errorText.length);
-          
-          if (errorText && errorText.trim() !== "") {
-            errorMessage = errorText;
-          } else {
-            // If response is empty, try to get error from status
-            switch (res.status) {
-              case 400:
-                errorMessage = "Bad request. Please check your input data. The server rejected the request format.";
-                break;
-              case 401:
-                errorMessage = "Unauthorized. Please login again.";
-                break;
-              case 403:
-                errorMessage = "Forbidden. You don't have permission to perform this action.";
-                break;
-              case 404:
-                errorMessage = "API endpoint not found.";
-                break;
-              case 500:
-                errorMessage = "Server error. Please try again later.";
-                break;
-              default:
-                errorMessage = `Request failed with status ${res.status}`;
-            }
-          }
-        } catch (parseError) {
-          console.error("Error parsing response:", parseError);
-          errorMessage = `Request failed with status ${res.status}`;
-        }
-        
-        console.error("Error response:", errorMessage);
-        toast.error(errorMessage);
-      }
+      } 
     } catch (error) {
       console.error("Network error:", error);
       toast.error("Network error. Please check your connection and try again.");
@@ -262,11 +222,12 @@ export default function EnquiryForm() {
                 <h2 className="text-2xl font-semibold text-gray-800 mb-6">
                   New Enquiry
                 </h2>
+
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="name">Enquirer Name *</Label>
                     <Input
-                      id="enquirerName"
+                      id="name"
                       placeholder="Enter name"
                       {...register("name", { 
                         required: "Enquirer name is required" 
@@ -281,7 +242,7 @@ export default function EnquiryForm() {
                   <div>
                     <Label htmlFor="student_name">Student Name *</Label>
                     <Input
-                      id="studentName"
+                      id="student_name"
                       placeholder="Enter student name"
                       {...register("student_name", { 
                         required: "Student name is required" 
@@ -296,7 +257,7 @@ export default function EnquiryForm() {
                   <div>
                     <Label htmlFor="email">Email *</Label>
                     <Input
-                      id="enquirerEmailId"
+                      id="email"
                       type="email"
                       placeholder="Enter email"
                       {...register("email", { 
@@ -316,7 +277,7 @@ export default function EnquiryForm() {
                   <div>
                     <Label htmlFor="mobile">Mobile *</Label>
                     <Input
-                      id="enquirerMobile"
+                      id="mobile"
                       type="tel"
                       placeholder="Enter mobile number"
                       {...register("mobile", {
@@ -334,9 +295,9 @@ export default function EnquiryForm() {
                   </div>
 
                   <div>
-                    <Label htmlFor="enquirerAlternateMobile">Alternate Mobile</Label>
+                    <Label htmlFor="alt_mobile">Alternate Mobile</Label>
                     <Input
-                      id="enquirerAlternateMobile"
+                      id="alt_mobile"
                       type="tel"
                       placeholder="Alternate number"
                       {...register("alt_mobile", {
@@ -353,11 +314,11 @@ export default function EnquiryForm() {
                   </div>
 
                   <div>
-                    <Label htmlFor="enquirerAddress">Address</Label>
+                    <Label htmlFor="address">Address</Label>
                     <Textarea
-                      id="enquirerAddress"
+                      id="address"
                       placeholder="Enter address"
-                      {...register("enquirerAddress")}
+                      {...register("address")}
                       className="mt-1"
                     />
                   </div>
@@ -371,7 +332,7 @@ export default function EnquiryForm() {
                 <div>
                   <Label htmlFor="query">Enquiry Query *</Label>
                   <Textarea
-                    id="enquirerQuery"
+                    id="query"
                     placeholder="Enter query"
                     {...register("query", { 
                       required: "Enquiry query is required" 
@@ -414,7 +375,7 @@ export default function EnquiryForm() {
                 <div>
                   <Label htmlFor="date">Enquiry Date *</Label>
                   <Input
-                    id="enquiryDate"
+                    id="date"
                     type="date"
                     {...register("date", { 
                       required: "Enquiry date is required" 
@@ -439,7 +400,7 @@ export default function EnquiryForm() {
                 <div>
                   <Label htmlFor="staff">Assigned Staff</Label>
                   <Input
-                    id="assignedStaffId"
+                    id="staff"
                     value={currentAdmin}
                     {...register("staff")}
                     className="mt-1"
@@ -448,6 +409,7 @@ export default function EnquiryForm() {
                 </div>
               </div>
 
+              {/* Submit Button */}
               <div className="flex justify-end pt-6">
                 <Button type="submit" disabled={loading}>
                   {loading ? "Saving..." : "Save Enquiry"}
@@ -455,7 +417,7 @@ export default function EnquiryForm() {
               </div>
             </div>
           </CardContent>
-          </form>
+        </form>
       </Card>
     </div>
   );

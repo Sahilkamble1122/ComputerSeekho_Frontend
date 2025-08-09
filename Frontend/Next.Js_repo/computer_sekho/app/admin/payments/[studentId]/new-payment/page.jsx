@@ -32,7 +32,7 @@ const NewPaymentPage = () => {
         setLoading(true);
         
         // Fetch student
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const studentResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS), {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -115,7 +115,7 @@ const NewPaymentPage = () => {
       setProcessing(true);
       
       // Get token from localStorage
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       if (!token) {
         toast.error('Authentication required. Please login again.');
         return;

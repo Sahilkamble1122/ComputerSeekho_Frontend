@@ -33,13 +33,13 @@ export default function LoginPage() {
         throw new Error(data.message || 'Invalid credentials');
       }
 
-      // Save token to localStorage
-      localStorage.setItem('token', data.token);
-      // Optionally, save admin info to localStorage
-      localStorage.setItem('admin', data.name);
+      // Save token to sessionStorage
+      sessionStorage.setItem('token', data.token);
+      // Optionally, save admin info to sessionStorage
+      sessionStorage.setItem('admin', data.name);
 
-      localStorage.setItem('img_path', data.imgPath);
-      // localStorage.setItem('admin_id', data.);
+      sessionStorage.setItem('img_path', data.imgPath);
+      // sessionStorage.setItem('admin_id', data.); // Uncomment if needed
 
       // Redirect to dashboard or another page
       router.push('/admin');

@@ -33,14 +33,14 @@ export default function Sidebar({ admin }) {
    const [imgPath, setImgPath] = useState('');
 
   useEffect(() => {
-    const storedAdmin = localStorage.getItem('admin');
-    const img_path = localStorage.getItem("img_path");
+    const storedAdmin = sessionStorage.getItem('admin');
+    const img_path = sessionStorage.getItem("img_path");
     if (storedAdmin) {
       try {
           setImgPath(img_path);
         setAdminName(storedAdmin); // assuming { "name": "Kirti Tiwari" }
       } catch (error) {
-        console.error('Invalid admin JSON in localStorage');
+        console.error('Invalid admin JSON in sessionStorage');
       }
     }
   }, []);

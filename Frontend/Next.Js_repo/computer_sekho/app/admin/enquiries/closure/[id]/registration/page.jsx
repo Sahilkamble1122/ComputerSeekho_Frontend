@@ -46,7 +46,7 @@ export default function EnquiryForm() {
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [paymentTypes, setPaymentTypes] = useState([]);
 
-  const getToken = () => localStorage.getItem("token");
+  const getToken = () => sessionStorage.getItem("token");
 
   useEffect(() => {
     fetchCourses();

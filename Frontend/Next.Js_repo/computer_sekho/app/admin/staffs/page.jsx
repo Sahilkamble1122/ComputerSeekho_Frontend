@@ -14,7 +14,7 @@ const ManageStaffPage = () => {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const res = await fetch('http://localhost:8080/api/staff', {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -39,7 +39,7 @@ const ManageStaffPage = () => {
     if (!confirm) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`http://localhost:8080/api/staff/${id}`, {
         method: 'DELETE',
         headers: {
@@ -90,7 +90,7 @@ const ManageStaffPage = () => {
                   <td className="px-4 py-2">{staff.staffEmail}</td>
                   <td className="px-4 py-2 flex gap-2">
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/admin/staff/${staff.staffId}/edit`}><Pencil size={16} /></Link>
+                      <Link href={`/admin/staff/${staff.staffId}`}><Pencil size={16} /></Link>
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => handleDelete(staff.staffId)}>
                       <Trash size={16} />

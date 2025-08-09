@@ -21,7 +21,7 @@ export default function EnquiryDetailPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`http://localhost:8080/api/enquiries/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });

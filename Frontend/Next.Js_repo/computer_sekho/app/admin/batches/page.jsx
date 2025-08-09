@@ -30,7 +30,7 @@ export default function BatchPage() {
 
   const fetchCourses = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`${API}/courses`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -43,7 +43,7 @@ export default function BatchPage() {
 
   const fetchBatches = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`${API}/batches`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -57,7 +57,7 @@ export default function BatchPage() {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this batch?")) {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const res = await fetch(`${API}/batches/${id}`, {
           method: "DELETE",
           headers: { 'Authorization': `Bearer ${token}` }
@@ -93,7 +93,7 @@ export default function BatchPage() {
       : `${API}/batches`;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(url, {
         method,
         headers: {

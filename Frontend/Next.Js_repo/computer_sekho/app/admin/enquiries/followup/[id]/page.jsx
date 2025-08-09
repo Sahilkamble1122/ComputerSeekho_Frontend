@@ -23,7 +23,7 @@ export default function FollowUpEditPage() {
 
   const fetchEnquiryDetails = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`http://localhost:8080/api/enquiries/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -51,7 +51,7 @@ export default function FollowUpEditPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`http://localhost:8080/api/followups?enquiry_id=${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -64,7 +64,7 @@ export default function FollowUpEditPage() {
 
       if (!res.ok) {throw new Error('Failed to submit follow-up');}
 
-      const token2 = localStorage.getItem('token');
+      const token2 = sessionStorage.getItem('token');
       const enquiryRes = await fetch(`http://localhost:8080/api/enquiries/${id}`, {
         headers: { 'Authorization': `Bearer ${token2}` }
       });

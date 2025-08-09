@@ -23,7 +23,7 @@ const StudentPaymentDashboard = () => {
         setLoading(true);
         
         // Fetch student details
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const studentResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS), {
           headers: {
             'Authorization': `Bearer ${token}`

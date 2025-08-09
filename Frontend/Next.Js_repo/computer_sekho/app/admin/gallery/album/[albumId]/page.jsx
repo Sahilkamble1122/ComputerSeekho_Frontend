@@ -18,7 +18,7 @@ export default function AlbumImagesPage() {
 
   const fetchImages = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`/api/images?albumId=${albumId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -36,7 +36,7 @@ export default function AlbumImagesPage() {
   const handleDeleteImage = async (imageId) => {
     if (!confirm("Delete this image?")) return;
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`/api/images/${imageId}`, { 
         method: "DELETE",
         headers: {
@@ -53,7 +53,7 @@ export default function AlbumImagesPage() {
 
   const handleSetCover = async (imageId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`/api/images/${imageId}/cover`, { 
         method: "PUT",
         headers: {

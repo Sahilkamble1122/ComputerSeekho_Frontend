@@ -38,7 +38,7 @@ export default function CloseEnquiryPage() {
 
   const fetchClosureReasons = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch("http://localhost:8080/api/closure-reasons", {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -79,7 +79,7 @@ export default function CloseEnquiryPage() {
           values.status === "closed" && isOther ? values.otherReason : null,
       };
 
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(
         `http://localhost:8080/api/enquiries/${id}/closure`,
         {

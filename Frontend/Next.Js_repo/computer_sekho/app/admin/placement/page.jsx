@@ -28,15 +28,15 @@ export default function ManagePlacementsPage() {
   const [batches, setBatches] = useState([]);
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [selectedBatch, setSelectedBatch] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState("all");
+  const [selectedBatch, setSelectedBatch] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     fetch("http://localhost:8080/api/courses", {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -62,11 +62,11 @@ export default function ManagePlacementsPage() {
   useEffect(() => {
     let filtered = students;
 
-    if (selectedCourse) {
+    if (selectedCourse && selectedCourse !== "all") {
       filtered = filtered.filter((s) => s.courseId == selectedCourse);
     }
 
-    if (selectedBatch) {
+    if (selectedBatch && selectedBatch !== "all") {
       filtered = filtered.filter((s) => s.batchId == selectedBatch);
     }
 
@@ -82,23 +82,21 @@ export default function ManagePlacementsPage() {
     setPage(1);
   }, [selectedCourse, selectedBatch, searchQuery, students]);
 
-  // const handlePlacementToggle = async (studentId, isPlaced) => {
-  //   try {
-  //     const token = localStorage.getItem('token');
-  //     const res = await fetch(`/api/students/${studentId}/placement`, {
-  //       method: "PUT",
-  //       headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${token}` },
-  //       body: JSON.stringify({ isPlaced: isPlaced }),
-  //     });
-  //     if (!res.ok) throw new Error();
-  //     toast({ title: "Placement status updated" });
-  //   } catch (error) {
-  //     toast({ title: "Failed to update placement status" });
-  //   }
-  // };
+  // Helper function to get course name by ID
+  const getCourseName = (courseId) => {
+    const course = courses.find(c => c.courseId === courseId);
+    return course ? course.courseName : `Course ${courseId}`;
+  };
+
+  // Helper function to get batch name by ID
+  const getBatchName = (batchId) => {
+    const batch = batches.find(b => b.batchId === batchId);
+    return batch ? batch.batchName : `Batch ${batchId}`;
+  };
+
   const handlePlacementToggle = async (studentId, isPlaced) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const res = await fetch(
         `http://localhost:8080/api/students/${studentId}/placement`,
         {
@@ -136,11 +134,12 @@ export default function ManagePlacementsPage() {
       <div className="flex gap-4">
         <div>
           <Label>Course</Label>
-          <Select onValueChange={setSelectedCourse}>
+          <Select value={selectedCourse} onValueChange={setSelectedCourse}>
             <SelectTrigger>
               <SelectValue placeholder="Select course" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All courses</SelectItem>
               {courses.map((course) => (
                 <SelectItem
                   key={course.courseId}
@@ -155,11 +154,12 @@ export default function ManagePlacementsPage() {
 
         <div>
           <Label>Batch</Label>
-          <Select onValueChange={setSelectedBatch}>
+          <Select value={selectedBatch} onValueChange={setSelectedBatch}>
             <SelectTrigger>
               <SelectValue placeholder="Select batch" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All batches</SelectItem>
               {batches.map((batch) => (
                 <SelectItem key={batch.batchId} value={String(batch.batchId)}>
                   {batch.batchName}
@@ -196,8 +196,8 @@ export default function ManagePlacementsPage() {
                 <TableRow key={student.studentId}>
                   <TableCell>{student.studentName}</TableCell>
                   <TableCell>{student.studentMobile}</TableCell>
-                  <TableCell>{student.courseName}</TableCell>
-                  <TableCell>{student.batchName}</TableCell>
+                  <TableCell>{getCourseName(student.courseId)}</TableCell>
+                  <TableCell>{getBatchName(student.batchId)}</TableCell>
                   <TableCell>
                     <Switch
                       checked={student.isPlaced === true}

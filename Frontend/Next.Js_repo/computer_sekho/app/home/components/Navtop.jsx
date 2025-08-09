@@ -4,41 +4,38 @@ import Link from "next/link";
 
 const Navtop = () => {
   return (
-    <div className="w-full h-[50px] flex items-stretch relative z-10 overflow-hidden text-sm font-medium">
-      {/* Red Section with Slanted End */}
-      <div className="flex-1 bg-red-600 text-white flex items-center justify-start pl-15 relative z-40 -mr-[25px]">
-        <span>HAVE ANY QUESTION ? +9029 435 311</span>
+    <div className="w-full h-[50px] relative overflow-hidden">
+      {/* Red Section - Full width background */}
+      <div className="absolute inset-0 bg-red-500"></div>
+      
+      {/* White diagonal separator */}
+      <div className="absolute right-0 top-0 h-full w-[420px] bg-white" 
+           style={{
+             clipPath: 'polygon(60px 0, 100% 0, 100% 100%, 40px 100%)'
+           }}>
       </div>
-
-      {/* Slanted Diagonal Divider */}
-      <div className="relative w-[50px] z-50">
-        {/* Left dark blue edge */}
-        <div className="absolute inset-0 bg-[#2c285e] clip-blue-left z-10" />
-        {/* Wider white diagonal */}
-        <div className="absolute inset-0 bg-white clip-white-center z-20" />
-        {/* Red fill to remove gap (no right blue strip now) */}
-        <div className="absolute inset-0 bg-red-600 z-30" />
+      
+      {/* Blue Section with diagonal cut */}
+      <div className="absolute right-0 top-0 h-full w-[400px] bg-[#1e3a8a]" 
+           style={{
+             clipPath: 'polygon(80px 0, 100% 0, 100% 100%, 60px 100%)'
+           }}>
       </div>
-
-      {/* Blue Section */}
-      <div className="w-[250px] bg-[#2c285e] text-white flex items-center justify-end pr-10 space-x-6 z-40">
-        <Link href="/login" className="hover:underline">Login</Link>
+      
+      {/* Content Layer */}
+      <div className="relative z-10 h-full flex items-center">
+        {/* Red Section Content */}
+        <div className="flex-1 flex items-center pl-6 text-white">
+          <span className="text-sm font-medium">HAVE ANY QUESTION ? +880 5698 598 6587</span>
+        </div>
+        
+        {/* Blue Section Content */}
+        <div className="w-[400px] flex items-center justify-end pr-8 space-x-8 text-white">
+          <Link href="/login" className="text-sm font-medium hover:text-gray-300 transition-colors uppercase tracking-wide">
+            LOGIN
+          </Link>
+        </div>
       </div>
-
-      {/* Custom CSS Clip Paths */}
-      <style jsx>{`
-        .clip-blue-left {
-          clip-path: polygon(0 0, 5% 0, 55% 100%, 50% 100%);
-        }
-
-        .clip-white-center {
-          clip-path: polygon(5% 0, 40% 0, 95% 100%, 55% 100%);
-        }
-
-        .clip-red-fix {
-          clip-path: polygon(40% 0, 100% 0, 100% 100%, 95% 100%);
-        }
-      `}</style>
     </div>
   );
 };

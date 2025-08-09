@@ -25,7 +25,7 @@ export default function EditStaff() {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const res = await fetch(`/api/staff/${staffId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }); // 🔁 Replace with your API endpoint
@@ -45,7 +45,7 @@ export default function EditStaff() {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`/api/staff/${staffId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },

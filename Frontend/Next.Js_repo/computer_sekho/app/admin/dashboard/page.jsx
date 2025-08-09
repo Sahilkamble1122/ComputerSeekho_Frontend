@@ -14,7 +14,7 @@ export default function AdminDashboard({ adminName }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         
         // Fetch enquiries
         const enquiriesRes = await fetch("http://localhost:8080/api/enquiries", {

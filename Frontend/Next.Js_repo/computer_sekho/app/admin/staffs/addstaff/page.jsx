@@ -64,7 +64,7 @@ export default function StaffRegister() {
         updatedDate: new Date().toISOString(),
       };
 
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const res = await fetch("http://localhost:8080/api/staff", {
         method: "POST",
         headers: {
