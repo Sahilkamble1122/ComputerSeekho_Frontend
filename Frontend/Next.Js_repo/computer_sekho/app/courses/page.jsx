@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import Footer from "../footer/components/Footer";
 import Navcomponent from "../home/components/Navcomponent";
@@ -40,13 +41,10 @@ export default function CoursesPage() {
   };
 
   const getCoverPhotoUrl = (photoPath) => {
-    if (!photoPath) return "/default.jpg";
-    // Agar already full URL hai to wahi return kar
+    if (!photoPath) return "/default-profile.png";
     if (photoPath.startsWith("http")) return photoPath;
-    // Warna public folder ka base URL lagao
-    return `${
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    }${photoPath}`;
+    if (photoPath.startsWith("/courses/")) return photoPath;
+    return `/courses/${photoPath}`;
   };
 
   return (
@@ -67,11 +65,14 @@ export default function CoursesPage() {
                 className="relative w-full h-[300px] rounded-lg overflow-hidden shadow-lg"
               >
                 {/* Background Image */}
-                <img
-                  // src={getCoverPhotoUrl(course.coverPhoto)}
-                  src={course.coverPhoto || "/default.jpg"}
+                <Image
+                  src={getCoverPhotoUrl(course.coverPhoto)}
                   alt={course.courseName || "Course Cover"}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  onError={(e) => {
+                    e.target.src = "/default-profile.png";
+                  }}
                 />
 
                 {/* Overlay with content */}

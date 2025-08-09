@@ -35,6 +35,7 @@ export default function ManageBatch() {
       .then((data) => setCourses(data));
   }, []);
 
+<<<<<<< HEAD
 const handleInputChange = (e) => {
   const { name, value, type, checked } = e.target;
   setForm((prev) => ({
@@ -91,6 +92,51 @@ const res = await fetch(url, {
     } catch (error) {
       console.error("Error saving batch:", error);
       toast.error("Something went wrong");
+=======
+  const fetchCourses = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API}/courses`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setCourses(data);
+    } catch (err) {
+      console.error("Error loading courses", err);
+    }
+  };
+
+  const fetchBatches = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API}/batches`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setBatches(data);
+    } catch (err) {
+      console.error("Error loading batches", err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this batch?")) {
+      try {
+        const token = sessionStorage.getItem("token");
+        const res = await fetch(`${API}/batches/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          alert("✅ Batch deleted successfully");
+          fetchBatches();
+        } else {
+          alert("❌ Failed to delete batch");
+        }
+      } catch (err) {
+        console.error("Delete error", err);
+      }
+>>>>>>> c9fa4a386a795f50156b2496abbedaf6b8c8252c
     }
   };
 
@@ -104,8 +150,19 @@ const res = await fetch(url, {
 
   const handleDelete = async (batchId) => {
     try {
+<<<<<<< HEAD
       const res = await fetch(`http://localhost:8080/api/batches/${batchId}`, {
         method: "DELETE",
+=======
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(form),
+>>>>>>> c9fa4a386a795f50156b2496abbedaf6b8c8252c
       });
 
       if (!res.ok) throw new Error("Failed to delete");
@@ -145,6 +202,7 @@ const res = await fetch(url, {
         </Button>
       </div>
 
+<<<<<<< HEAD
       <div className="space-y-4 mb-12">
         {batches.map((batch) => (
           <div
@@ -173,6 +231,111 @@ const res = await fetch(url, {
               >
                 Delete
               </Button>
+=======
+      <div className="bg-white p-6 rounded shadow space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-red-600">
+            Existing Batches
+          </h2>
+          <div className="flex items-center space-x-3">
+            <input
+              type="text"
+              placeholder="Search by batch name"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border rounded p-2"
+            />
+            <button
+              onClick={() => {
+                setForm({
+                  batch_id: null,
+                  batch_name: "",
+                  batch_start_time: "",
+                  batch_end_time: "",
+                  course_id: "",
+                  presentation_date: "",
+                  course_fees: "",
+                  course_fees_from: "",
+                  course_fees_to: "",
+                  batch_is_active: true,
+                });
+                setShowForm(true);
+              }}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              + Add New Batch
+            </button>
+          </div>
+        </div>
+
+        {currentBatches.length === 0 ? (
+          <p className="text-gray-500">No batches found.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full border">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="border px-4 py-2 text-left">Batch ID</th>
+                  <th className="border px-4 py-2 text-left">Name</th>
+                  <th className="border px-4 py-2 text-left">Time</th>
+                  <th className="border px-4 py-2 text-left">Course</th>
+                  <th className="border px-4 py-2 text-left">Fees</th>
+                  <th className="border px-4 py-2 text-left">Presentation</th>
+                  <th className="border px-4 py-2 text-left">Status</th>
+                  <th className="border px-4 py-2 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentBatches.map((batch) => (
+                  <tr key={batch.batch_id}>
+                    <td className="border px-4 py-2">{batch.batch_id}</td>
+                    <td className="border px-4 py-2">{batch.batch_name}</td>
+                    <td className="border px-4 py-2">
+                      {batch.batch_start_time} - {batch.batch_end_time}
+                    </td>
+                    <td className="border px-4 py-2">{batch.course_id}</td>
+                    <td className="border px-4 py-2">₹{batch.course_fees}</td>
+                    <td className="border px-4 py-2">
+                      {batch.presentation_date}
+                    </td>
+                    <td className="border px-4 py-2">
+                      {batch.batch_is_active ? "Active" : "Inactive"}
+                    </td>
+                    <td className="border px-4 py-2 space-x-2">
+                      <button
+                        onClick={() => handleEdit(batch)}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(batch.batch_id)}
+                        className="text-red-600 hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex justify-center items-center space-x-2 mt-4">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={`page-${page}`} // ✅ unique key
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 rounded ${
+                      page === currentPage
+                        ? "bg-red-600 text-white"
+                        : "bg-gray-200"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
+>>>>>>> c9fa4a386a795f50156b2496abbedaf6b8c8252c
             </div>
           </div>
         ))}

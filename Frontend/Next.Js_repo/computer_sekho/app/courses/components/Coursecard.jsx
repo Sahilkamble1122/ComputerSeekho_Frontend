@@ -1,25 +1,33 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 export default function CourseCard({ course }) {
   if (!course) return null;
 
-  // Agar DB me path directly `/courses/...` hai, use as it is
-  // warna default image dikhana
-  const imageSrc = course.coverPhoto
-    ? course.coverPhoto.startsWith("/courses/")
-      ? course.coverPhoto
-      : `/courses/${course.coverPhoto}`
-    : "/default.jpg";
+  const getCoverPhotoUrl = (photoPath) => {
+    if (!photoPath) return "/default-profile.png";
+    if (photoPath.startsWith("http")) return photoPath;
+    if (photoPath.startsWith("/courses/")) return photoPath;
+    return `/courses/${photoPath}`;
+  };
+
+  const imageSrc = getCoverPhotoUrl(course.coverPhoto);
 
   return (
     <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden h-full flex flex-col">
-      <img
-        src={imageSrc}
-        alt={course.courseName || "Course Cover"}
-        className="w-full h-48 object-cover"
-      />
+      <div className="relative w-full h-48">
+        <Image
+          src={imageSrc}
+          alt={course.courseName || "Course Cover"}
+          fill
+          className="object-cover"
+          onError={(e) => {
+            e.target.src = "/default-profile.png";
+          }}
+        />
+      </div>
       <div className="p-4 space-y-2 flex-1 flex flex-col">
         <h2 className="text-xl font-semibold text-gray-800">
           {course.courseName}
