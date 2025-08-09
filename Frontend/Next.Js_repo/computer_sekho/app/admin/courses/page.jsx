@@ -26,9 +26,9 @@ export default function CoursePage() {
 
   const fetchCourses = async () => {
     try {
-      const token = sessionStorage.getItem('token');
+      const token = sessionStorage.getItem("token");
       const response = await fetch(API_BASE, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
       setCourses(data);
@@ -61,16 +61,17 @@ export default function CoursePage() {
     formData.append("file", file);
 
     try {
-      const token = sessionStorage.getItem('token');
-      const res = await fetch("http://localhost:8080/api/upload", {
+      const token = sessionStorage.getItem("token");
+      const res = await fetch("/api/courses/upload", {
         method: "POST",
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
       if (res.ok) {
         const data = await res.json();
-        return data.path || "";
+        // IMPORTANT: yaha `filePath` hai, `filepath` nahi
+        return data.filePath || "";
       }
     } catch (err) {
       console.error("File upload error", err);
@@ -91,14 +92,14 @@ export default function CoursePage() {
     };
 
     try {
-      const token = sessionStorage.getItem('token');
+      const token = sessionStorage.getItem("token");
       const response = await fetch(
         formData.courseId ? `${API_BASE}/${formData.courseId}` : API_BASE,
         {
           method: formData.courseId ? "PUT" : "POST",
           headers: {
-              "Content-Type": "application/json",
-              'Authorization': `Bearer ${token}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(payload),
         }
@@ -141,10 +142,10 @@ export default function CoursePage() {
   const handleDelete = async (courseId) => {
     if (!window.confirm("Are you sure you want to delete this course?")) return;
     try {
-      const token = sessionStorage.getItem('token');
+      const token = sessionStorage.getItem("token");
       const res = await fetch(`${API_BASE}/${courseId}`, {
         method: "DELETE",
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         fetchCourses();
@@ -315,7 +316,7 @@ export default function CoursePage() {
                 className="border p-2 rounded w-full"
               />
             </label>
-          </div> 
+          </div>
 
           <label className="block">
             <span className="text-gray-700">Syllabus</span>

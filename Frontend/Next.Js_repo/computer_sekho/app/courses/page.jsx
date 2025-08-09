@@ -1,6 +1,5 @@
 "use client";
 
-
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Footer from "../footer/components/Footer";
@@ -40,6 +39,16 @@ export default function CoursesPage() {
     }
   };
 
+  const getCoverPhotoUrl = (photoPath) => {
+    if (!photoPath) return "/default.jpg";
+    // Agar already full URL hai to wahi return kar
+    if (photoPath.startsWith("http")) return photoPath;
+    // Warna public folder ka base URL lagao
+    return `${
+      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+    }${photoPath}`;
+  };
+
   return (
     <>
       <Navcomponent />
@@ -59,14 +68,14 @@ export default function CoursesPage() {
               >
                 {/* Background Image */}
                 <img
-                  src={course.coverPhoto}
+                  // src={getCoverPhotoUrl(course.coverPhoto)}
+                  src={course.coverPhoto || "/default.jpg"}
                   alt={course.courseName || "Course Cover"}
-               
                   className="absolute inset-0 w-full h-full object-cover"
                 />
 
                 {/* Overlay with content */}
-                <div className="absolute inset-0 bg-gray-500 flex flex-col justify-center items-center text-white text-center px-6">
+                <div className="absolute inset-0 bg-gray-500 flex flex-col justify-center items-center text-white text-center px-6 bg-opacity-50">
                   <h2 className="text-3xl font-bold mb-2 drop-shadow-lg">
                     {course.courseName}
                   </h2>
