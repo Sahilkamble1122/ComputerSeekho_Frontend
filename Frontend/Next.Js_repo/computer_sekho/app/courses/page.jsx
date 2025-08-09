@@ -42,11 +42,8 @@ export default function CoursesPage() {
 
   const getCoverPhotoUrl = (photoPath) => {
     if (!photoPath) return "/default-profile.png";
-    // If it's already a full URL, return as is
     if (photoPath.startsWith("http")) return photoPath;
-    // If it starts with /courses/, use as is
     if (photoPath.startsWith("/courses/")) return photoPath;
-    // Otherwise, add /courses/ prefix
     return `/courses/${photoPath}`;
   };
 
