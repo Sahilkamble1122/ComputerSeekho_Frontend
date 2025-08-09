@@ -106,8 +106,8 @@ const NewPaymentPage = () => {
     }
 
     const amount = parseFloat(form.amount);
-    if (amount > student.pendingFees) {
-      toast.error('Payment amount cannot exceed pending fees');
+    if (Number.isNaN(amount) || amount <= 0) {
+      toast.error('Enter a valid amount');
       return;
     }
 
@@ -121,36 +121,105 @@ const NewPaymentPage = () => {
         return;
       }
 
-      const response = await fetch('/api/payments/process', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
+      // 1) Fetch the latest student for fresh pending fees
+      let currentPending = 0;
+      try {
+        const studentRes = await fetch(`/api/students/${studentId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!studentRes.ok) {
+          const errText = await studentRes.text();
+          toast.error(errText || 'Failed to load student');
+          return;
+        }
+        const freshStudent = await studentRes.json();
+        currentPending = parseFloat(freshStudent.pendingFees ?? 0);
+      } catch (err) {
+        toast.error('Network error while fetching student');
+        return;
+      }
+      if (amount > currentPending) {
+        toast.error('Payment amount cannot exceed pending fees');
+        return;
+      }
+
+      // 2) Compute new pending and PATCH it back
+      const newPending = Math.max(0, currentPending - amount);
+      try {
+        const patchRes = await fetch(`/api/students/${studentId}/pending-fees?pendingFees=${encodeURIComponent(newPending)}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!patchRes.ok) {
+          const errText = await patchRes.text();
+          toast.error(errText || 'Failed to update pending fees');
+          return;
+        }
+      } catch (err) {
+        toast.error('Network error while updating pending fees');
+        return;
+      }
+
+      // 3) Create payment (to obtain paymentId)
+      let paymentId = null;
+      try {
+        const paymentPayload = {
           studentId: student.id,
           paymentTypeId: parseInt(form.paymentTypeId),
-          paymentDate: form.paymentDate,
+          paymentDate: form.paymentDate || new Date().toISOString().split('T')[0],
           courseId: student.courseId,
           batchId: student.batchId,
           amount: amount,
           status: 'Successful'
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success('Payment processed successfully!');
-        // Update the student's pending fees in the UI
-        setStudent(prev => ({
-          ...prev,
-          pendingFees: result.newPendingFees
-        }));
-        router.push(`/admin/payments/${studentId}`);
-      } else {
-        toast.error(result.error || 'Failed to process payment');
+        };
+        const paymentUrl = getApiUrl(API_CONFIG.ENDPOINTS.PROCESS_PAYMENT);
+        const payRes = await fetch(paymentUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(paymentPayload)
+        });
+        if (payRes.ok) {
+          const payResult = await payRes.json();
+          paymentId = payResult.paymentId || payResult.id || null;
+        } else {
+          const errText = await payRes.text();
+          console.warn('Payment creation failed:', errText);
+        }
+      } catch (err) {
+        console.warn('Network error while creating payment');
       }
+
+      // 4) Create receipt record referencing paymentId and studentId
+      try {
+        const receiptPayload = {
+          receiptAmount: amount,
+          receiptDate: form.paymentDate || new Date().toISOString().split('T')[0],
+          receiptNumber: `RCP-${Date.now()}-${studentId}`,
+          paymentId: paymentId,
+          studentId: parseInt(studentId)
+        };
+        const receiptUrl = getApiUrl(API_CONFIG.ENDPOINTS.PAYMENT_HISTORY);
+        const receiptRes = await fetch(receiptUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(receiptPayload)
+        });
+        if (!receiptRes.ok) {
+          console.warn('Receipt creation failed');
+        }
+      } catch (err) {
+        console.warn('Network error while creating receipt');
+      }
+
+      toast.success('Payment processed successfully!');
+      setStudent(prev => ({ ...prev, pendingFees: newPending }));
+      router.push(`/admin/payments/${studentId}`);
     } catch (error) {
       console.error('Error processing payment:', error);
       toast.error('Error processing payment. Please try again.');

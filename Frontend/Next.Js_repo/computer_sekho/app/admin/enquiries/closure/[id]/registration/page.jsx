@@ -67,17 +67,21 @@ export default function EnquiryForm() {
       const data = await res.json();
       setForm((prev) => ({
         ...prev,
-        name: data.name || "",
+        // Prefer studentName, fallback to enquirerName
+        name: data.studentName || data.enquirerName || "",
+        // These may not exist on enquiry; leave blank if missing
         dob: data.dob || "",
         gender: data.gender || "",
+        // Address keys may differ; keep empty if not present
         resAddress: data.enquirerAddress || "",
         officeAddress: data.officeAddress || "",
+        // Phones from enquiry if present
         phoneR: data.phoneR || "",
         phoneO: data.phoneO || "",
-        mobile: data.mobile || "",
-        email: data.email || "",
+        mobile: (data.enquirerMobile && String(data.enquirerMobile)) || "",
+        email: data.enquirerEmailId || "",
         qualification: data.qualification || "",
-        course: data.courseId || "",
+        course: data.courseId ? String(data.courseId) : "",
       }));
     } catch (err) {
       console.error("Error loading enquiry data:", err);
@@ -200,8 +204,8 @@ export default function EnquiryForm() {
       newErrors.email = "Valid email is required";
     if (!form.qualification.trim())
       newErrors.qualification = "Qualification is required";
-    if (!form.course.trim()) newErrors.course = "Course is required";
-    if (!form.batchId) newErrors.batchId = "Batch is required";
+    if (!String(form.course).trim()) newErrors.course = "Course is required";
+    if (!String(form.batchId).trim()) newErrors.batchId = "Batch is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -209,14 +213,14 @@ export default function EnquiryForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    form.courseFees = selectedBatch?.courseFees || 0;
-    form.pendingFees = form.courseFees;
+    // Client-side validation only; disable native validation on form
     if (!validateForm()) {
       alert("❌ Please correct the errors before submitting.");
       return;
     }
 
     try {
+      setLoading(true);
       const token = getToken();
       if (!token) {
         alert("❌ You are not logged in.");
@@ -234,6 +238,13 @@ export default function EnquiryForm() {
       }
 
       // Prepare JSON payload
+      // Compute fees locally to avoid mutating React state directly
+      const computedCourseFees = selectedBatch?.courseFees || parseFloat(form.courseFees) || 0;
+      const computedPendingFees = (() => {
+        const initPay = parseFloat(form.initialPayment) || 0;
+        return Math.max(0, computedCourseFees - initPay);
+      })();
+
       const studentData = {
         studentName: form.name,
         studentAddress: form.resAddress,
@@ -246,8 +257,8 @@ export default function EnquiryForm() {
         studentPassword: "pass123",
         studentUsername: form.email,
         batchId: parseInt(form.batchId),
-        courseFee: parseFloat(form.courseFees),
-        pendingFees: parseFloat(form.pendingFees),
+        courseFee: computedCourseFees,
+        pendingFees: computedPendingFees,
         photo: photoBase64,
       };
 
@@ -314,6 +325,40 @@ export default function EnquiryForm() {
         alert("✅ Student registered successfully!");
       }
 
+      // After successful student registration, mark the enquiry as processed/success
+      try {
+        const token2 = getToken();
+        // 1) Send closure reason (only closure fields allowed by backend)
+        await fetch(`http://localhost:8080/api/enquiries/${enquiryId}/closure`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token2}`,
+          },
+          body: JSON.stringify({
+            closureReasonId: null,
+            closureReason: "Success",
+          }),
+        });
+        // 2) Update the enquiry status to 'success' using the new status endpoint
+        await fetch(`http://localhost:8080/api/enquiries/${enquiryId}/status?status=success`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token2}`,
+          },
+        });
+        
+        // 3) Update enquiryProcessedFlag to true
+        await fetch(`http://localhost:8080/api/enquiries/${enquiryId}/processed?enquiryProcessedFlag=true`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token2}`,
+          },
+        });
+      } catch (_) {
+        // ignore failure to not block user
+      }
+
       setForm(initialFormState);
       setPreview(null);
       // Redirect to initial payment page for this student
@@ -322,6 +367,8 @@ export default function EnquiryForm() {
       }
     } catch (error) {
       alert("❌ Registration failed: " + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -335,7 +382,7 @@ export default function EnquiryForm() {
         <div className="w-20" />
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           <div className="space-y-4">
             <div>

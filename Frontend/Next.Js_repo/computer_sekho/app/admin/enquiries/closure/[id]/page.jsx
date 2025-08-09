@@ -68,8 +68,14 @@ export default function CloseEnquiryPage() {
     try {
       setLoading(true);
 
-      const isOther = values.closureReason === "Other";
+      // If success → go to registration without updating enquiry yet
+      if (values.status === "success") {
+        router.push(`/admin/enquiries/closure/${id}/registration`);
+        return;
+      }
 
+      // If closed → call closure API with reason
+      const isOther = values.closureReason === "Other";
       const payload = {
         closureReasonId:
           values.status === "closed" && !isOther
@@ -80,24 +86,52 @@ export default function CloseEnquiryPage() {
       };
 
       const token = sessionStorage.getItem('token');
+      
+      // First, call the closure endpoint with reason details
+      try {
+        const closureRes = await fetch(
+          `http://localhost:8080/api/enquiries/${id}/closure`,
+          {
+            method: "PATCH",
+            headers: { 
+              "Content-Type": "application/json", 
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+        
+        if (!closureRes.ok) {
+          const errorText = await closureRes.text();
+          throw new Error(`Failed to set closure reason: ${closureRes.status} - ${errorText}`);
+        }
+      } catch (error) {
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          throw new Error("Network error - please check if backend server is running and CORS is configured properly");
+        }
+        throw error;
+      }
+      
+      // Then, update the enquiry status to 'closed'
       const res = await fetch(
-        `http://localhost:8080/api/enquiries/${id}/closure`,
+        `http://localhost:8080/api/enquiries/${id}/status?status=true`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify(payload),
+          headers: { 'Authorization': `Bearer ${token}` },
         }
       );
 
       if (!res.ok) throw new Error("Failed to close enquiry");
+      
+      // Finally, update enquiryProcessedFlag to true
+      await fetch(`http://localhost:8080/api/enquiries/${id}/processed?enquiryProcessedFlag=true`, {
+        method: "PATCH",
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
 
       toast.success("Enquiry marked as closed");
-
-      if (values.status === "success") {
-        router.push(`/admin/enquiries/closure/${id}/registration`);
-      } else {
-        router.push("/admin/enquiries");
-      }
+      router.push("/admin/enquiries");
     } catch (err) {
       toast.error(err.message || "Something went wrong");
     } finally {

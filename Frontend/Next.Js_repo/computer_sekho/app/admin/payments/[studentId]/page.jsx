@@ -58,19 +58,20 @@ const StudentPaymentDashboard = () => {
           toast.error('Student not found');
         }
         
-        // Fetch payment history using our new API route
-        const historyResponse = await fetch(`/api/payments/history?studentId=${studentId}`, {
+        // Fetch receipts directly by studentId
+        const receiptsResponse = await fetch(getApiUrl(`${API_CONFIG.ENDPOINTS.PAYMENT_HISTORY}?studentId=${studentId}`), {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         });
         
-        if (historyResponse.ok) {
-          const result = await historyResponse.json();
-          setPaymentHistory(result.data || []);
+        if (receiptsResponse.ok) {
+          const receiptsData = await receiptsResponse.json();
+          // Handle different response formats
+          const receipts = Array.isArray(receiptsData) ? receiptsData : (receiptsData.data || []);
+          setPaymentHistory(receipts);
         } else {
-          console.error('Failed to fetch payment history');
+          console.error('Failed to fetch receipts');
           setPaymentHistory([]);
         }
         
@@ -188,46 +189,33 @@ const StudentPaymentDashboard = () => {
             </Link>
           </Button>
         )}
-        <Button asChild variant="outline">
-          <Link href={`/admin/payments/${studentId}/history`}>
-            <History size={16} className="mr-2" />
-            View Payment History
-          </Link>
-        </Button>
+
       </div>
 
-      {/* Recent Payments */}
+      {/* Payment History */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Payments</CardTitle>
+          <CardTitle>Payment History</CardTitle>
         </CardHeader>
         <CardContent>
           {paymentHistory.length === 0 ? (
             <p className="text-center text-gray-500 py-4">No payment history found.</p>
           ) : (
             <div className="space-y-2">
-                             {paymentHistory.slice(0, 5).map((receipt) => (
-                 <div key={receipt.receiptId} className="flex justify-between items-center p-3 border rounded-lg">
-                   <div>
-                     <p className="font-medium">Receipt #{receipt.receiptId}</p>
-                     <p className="text-sm text-gray-600">
-                       {receipt.receiptDate ? new Date(receipt.receiptDate).toLocaleDateString() : new Date(receipt.createdDate).toLocaleDateString()}
-                     </p>
-                   </div>
-                   <p className="font-semibold text-green-600">
-                     {receipt.receiptAmount ? formatCurrency(receipt.receiptAmount) : 'N/A'}
-                   </p>
-                 </div>
-               ))}
-              {paymentHistory.length > 5 && (
-                <div className="text-center pt-2">
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={`/admin/payments/${studentId}/history`}>
-                      View All Payments
-                    </Link>
-                  </Button>
+              {paymentHistory.map((receipt) => (
+                <div key={receipt.receiptId} className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Receipt #{receipt.receiptNumber || receipt.receiptId}</p>
+                    <p className="text-sm text-gray-600">
+                      {receipt.receiptDate ? new Date(receipt.receiptDate).toLocaleDateString() : 
+                       receipt.createdDate ? new Date(receipt.createdDate).toLocaleDateString() : 'N/A'}
+                    </p>
+                  </div>
+                  <p className="font-semibold text-green-600">
+                    {receipt.receiptAmount ? formatCurrency(receipt.receiptAmount) : 'N/A'}
+                  </p>
                 </div>
-              )}
+              ))}
             </div>
           )}
         </CardContent>
