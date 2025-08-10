@@ -17,7 +17,7 @@ export default function AlbumList() {
     const fetchAlbums = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`http://localhost:8080/api/albums?page=${page}&limit=8`); // 🔁 Update API endpoint
+        const res = await fetch(`/api/albums?page=${page}&limit=8`);
         const data = await res.json();
 
         if (data?.albums?.length > 0) {

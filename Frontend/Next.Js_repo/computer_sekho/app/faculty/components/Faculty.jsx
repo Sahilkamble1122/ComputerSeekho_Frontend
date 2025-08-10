@@ -12,7 +12,9 @@ export default function Faculty() {
       try {
         const res = await fetch("http://localhost:8080/api/staff");
         const data = await res.json();
-        setStaff(data);
+        // Filter to show only teaching staff
+        const teachingStaff = data.filter(staff => staff.staffRole === "Teaching");
+        setStaff(teachingStaff);
       } catch (err) {
         console.error("Failed to fetch staff:", err);
       } finally {
@@ -55,7 +57,7 @@ export default function Faculty() {
         </div>
       ) : staff.length === 0 ? (
         <div className="text-center py-20 text-gray-500 text-lg">
-          Staff not found.
+          No teaching staff found.
         </div>
       ) : (
         <div className="container mx-auto px-4 space-y-10">
@@ -64,15 +66,17 @@ export default function Faculty() {
               key={index}
               className="relative w-full max-w-6xl mx-auto rounded-md overflow-hidden"
             >
-              <Image
-                src={getImageUrl(faculty.photoUrl)}
-                alt={faculty.staffName ? faculty.staffName : "Faculty Photo"}
-                width={1200}
-                height={600}
-                className="w-full h-auto object-cover"
-                priority={index === 0}
-                unoptimized={true}
-              />
+              {/* Fixed height container to prevent layout shifts */}
+              <div className="relative w-full h-[400px] md:h-[500px]">
+                <Image
+                  src={getImageUrl(faculty.photoUrl)}
+                  alt={faculty.staffName ? faculty.staffName : "Faculty Photo"}
+                  fill
+                  className="object-cover"
+                  priority={index === 0}
+                  unoptimized={true}
+                />
+              </div>
               <div className="absolute top-1/2 right-0 w-full md:w-[40%] bg-red-500/70 text-white rounded-l-xl p-6 md:p-8 shadow-lg">
                 <h3 className="text-2xl font-bold mb-2 font-[cursive]">
                   {faculty.staffName}

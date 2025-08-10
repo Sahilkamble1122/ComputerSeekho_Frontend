@@ -14,21 +14,28 @@ export default function ImageGallery({ images, loading }) {
           ))
         : images.length > 0
         ? images.map((img, i) => (
-            <div key={i} className="text-center">
+            <div key={img.id || i} className="text-center group">
               <Dialog>
                 <DialogTrigger asChild>
-                  <Image
-                    src={img.url}
-                    alt={img.caption || `Image ${i}`}
-                    width={200}
-                    height={140}
-                    className="rounded object-cover w-full h-36 cursor-pointer"
-                  />
+                  <div className="relative overflow-hidden rounded-lg">
+                    <Image
+                      src={img.url}
+                      alt={img.caption || `Image ${i + 1}`}
+                      width={200}
+                      height={140}
+                      className="rounded object-cover w-full h-36 cursor-pointer transition-transform duration-300 group-hover:scale-105"
+                    />
+                    {img.isCover && (
+                      <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                        Cover
+                      </div>
+                    )}
+                  </div>
                 </DialogTrigger>
-                <DialogContent className="flex justify-center items-center">
+                <DialogContent className="flex justify-center items-center max-w-4xl">
                   <Image
                     src={img.url}
-                    alt={img.caption || `Full Image ${i}`}
+                    alt={img.caption || `Full Image ${i + 1}`}
                     width={800}
                     height={500}
                     className="rounded object-contain max-h-[90vh] w-auto"
@@ -36,7 +43,7 @@ export default function ImageGallery({ images, loading }) {
                 </DialogContent>
               </Dialog>
               {img.caption && (
-                <p className="text-xs text-gray-500 mt-1">{img.caption}</p>
+                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{img.caption}</p>
               )}
             </div>
           ))
