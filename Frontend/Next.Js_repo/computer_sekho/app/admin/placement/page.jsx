@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { updateStudentPlacementStatus } from "@/lib/utils";
 
 export default function ManagePlacementsPage() {
   const [courses, setCourses] = useState([]);
@@ -97,18 +98,7 @@ export default function ManagePlacementsPage() {
   const handlePlacementToggle = async (studentId, isPlaced) => {
     try {
       const token = sessionStorage.getItem("token");
-      const res = await fetch(
-        `http://localhost:8080/api/students/${studentId}/placement`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ isPlaced }),
-        }
-      );
-      if (!res.ok) throw new Error();
+      await updateStudentPlacementStatus(studentId, isPlaced, token);
 
       // ✅ Local state update so UI updates instantly
       setStudents((prev) =>

@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Link from "next/link";
 
 export default function AddAlbum() {
   const [albumName, setAlbumName] = useState("");
@@ -19,6 +20,7 @@ export default function AddAlbum() {
   const [selectedAlbumId, setSelectedAlbumId] = useState("");
   const [imageFiles, setImageFiles] = useState([]);
   const [coverImageIndex, setCoverImageIndex] = useState(null); // Track index of cover image
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     fetchAlbums();
@@ -109,32 +111,74 @@ export default function AddAlbum() {
       return toast.error("Please select album and upload images");
     }
 
-    const formData = new FormData();
-    formData.append("album_id", selectedAlbumId);
+    if (coverImageIndex === null) {
+      return toast.error("Please select a cover image");
+    }
 
-    imageFiles.forEach((file, index) => {
-      formData.append("images", file);
-      // ✅ Set cover flag for the selected image index only
-      formData.append(`isAlbumCover${index}`, index === coverImageIndex);
-    });
+    // Validate file types
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const invalidFiles = imageFiles.filter(file => !validTypes.includes(file.type));
+    if (invalidFiles.length > 0) {
+      return toast.error("Please upload only valid image files (JPEG, PNG, GIF, WebP)");
+    }
+
+    // Validate file sizes (max 5MB per file)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const oversizedFiles = imageFiles.filter(file => file.size > maxSize);
+    if (oversizedFiles.length > 0) {
+      return toast.error("Please upload images smaller than 5MB each");
+    }
+
+    setIsUploading(true);
 
     try {
+      const formData = new FormData();
+      formData.append("albumId", selectedAlbumId);
+      formData.append("coverImageIndex", coverImageIndex.toString());
+
+      imageFiles.forEach((file) => {
+        formData.append("images", file);
+      });
+
       const token = sessionStorage.getItem('token');
-      const res = await fetch("http://localhost:8080/api/images", {
-        method: "POST", // ✅ Upload multiple images
+      const res = await fetch("/api/images", {
+        method: "POST",
         headers: {
           'Authorization': `Bearer ${token}`
         },
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Failed to upload images");
-      toast.success("Images uploaded successfully");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to upload images");
+      }
+
+      const result = await res.json();
+      toast.success(result.message || "Images uploaded successfully");
       setImageFiles([]);
       setCoverImageIndex(null);
+      setSelectedAlbumId("");
     } catch (err) {
       console.error(err);
-      toast.error("Image upload failed");
+      toast.error(err.message || "Image upload failed");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const clearImageForm = () => {
+    setImageFiles([]);
+    setCoverImageIndex(null);
+    setSelectedAlbumId("");
+  };
+
+  const removeImage = (indexToRemove) => {
+    setImageFiles(prev => prev.filter((_, index) => index !== indexToRemove));
+    if (coverImageIndex === indexToRemove) {
+      setCoverImageIndex(null);
+    } else if (coverImageIndex > indexToRemove) {
+      setCoverImageIndex(prev => prev - 1);
     }
   };
 
@@ -158,13 +202,20 @@ export default function AddAlbum() {
                 className="flex items-center justify-between px-4 py-2 border rounded hover:bg-gray-50"
               >
                 <span>{album.albumName}</span>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDeleteAlbum(album.albumId)}
-                >
-                  Delete
-                </Button>
+                <div className="flex gap-2">
+                  <Link href={`/admin/gallery/album/${album.albumId}`}>
+                    <Button variant="outline" size="sm">
+                      View Images
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteAlbum(album.albumId)}
+                  >
+                    Delete
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>
@@ -233,30 +284,73 @@ export default function AddAlbum() {
               ))}
             </select>
 
-            <Label>Upload Images</Label>
-            <Input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={(e) => setImageFiles(Array.from(e.target.files))}
-            />
+            <div className="space-y-2">
+              <Label>Upload Images</Label>
+              <Input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => setImageFiles(Array.from(e.target.files))}
+              />
+              <p className="text-sm text-gray-600">
+                Supported formats: JPEG, PNG, GIF, WebP (Max 5MB per file)
+              </p>
+            </div>
 
-            {/* ✅ Mark one image as cover */}
+            {/* Image previews and cover selection */}
             {imageFiles.length > 0 && (
-              <div className="space-y-2">
-                {imageFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Checkbox
-                      checked={coverImageIndex === index}
-                      onCheckedChange={() => setCoverImageIndex(index)}
-                    />
-                    <Label>{file.name}</Label>
-                  </div>
-                ))}
+              <div className="space-y-4">
+                <Label>Select Cover Image (Required)</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {imageFiles.map((file, index) => (
+                    <div key={index} className="relative border rounded-lg p-3">
+                      <div className="aspect-square mb-2 relative">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={file.name}
+                          className="w-full h-full object-cover rounded"
+                        />
+                        {coverImageIndex === index && (
+                          <div className="absolute top-2 right-2 bg-yellow-400 text-xs px-2 py-1 rounded-full font-semibold">
+                            Cover
+                          </div>
+                        )}
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 left-2 w-6 h-6 p-0 text-xs"
+                          onClick={() => removeImage(index)}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id={`cover-${index}`}
+                          checked={coverImageIndex === index}
+                          onCheckedChange={() => setCoverImageIndex(index)}
+                        />
+                        <Label htmlFor={`cover-${index}`} className="text-sm truncate">
+                          {file.name}
+                        </Label>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
-            <Button type="submit">Upload Images</Button>
+            <div className="flex gap-2">
+              <Button type="submit" disabled={isUploading}>
+                {isUploading ? "Uploading..." : "Upload Images"}
+              </Button>
+              <Button type="button" variant="outline" onClick={clearImageForm}>
+                Clear Form
+              </Button>
+            </div>
           </form>
         </TabsContent>
       </Tabs>
