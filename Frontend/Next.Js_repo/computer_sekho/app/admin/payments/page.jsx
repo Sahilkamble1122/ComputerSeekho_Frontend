@@ -11,40 +11,87 @@ import { getApiUrl, API_CONFIG } from '@/lib/config';
 
 const PaymentsPage = () => {
   const [students, setStudents] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [studentsPerPage] = useState(10);
 
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         const token = sessionStorage.getItem('token');
-        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS), {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const data = await response.json();
         
-        // Normalize to expected UI shape
-        const toUiStudent = (s) => ({
-          id: s.id ?? s.studentId ?? s.student_id,
-          name: s.name ?? s.studentName,
-          email: s.email ?? s.studentEmail,
-          phone: s.phone ?? s.studentMobile,
-          course: s.course ?? s.courseName ?? (s.courseId ? `Course ${s.courseId}` : ''),
-          batch: s.batch ?? s.batchName ?? (s.batchId ? `Batch ${s.batchId}` : ''),
-          totalFees: s.totalFees ?? s.courseFee ?? 0,
-          pendingFees: s.pendingFees ?? (s.courseFee ?? 0),
-          courseId: s.courseId,
-          batchId: s.batchId,
-        });
+        // Fetch students, courses, and batches in parallel
+        const [studentsResponse, coursesResponse, batchesResponse] = await Promise.all([
+          fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS), {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`${getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS).replace('/api/students', '/api/courses')}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`${getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS).replace('/api/students', '/api/batches')}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        ]);
+
+        const [studentsData, coursesData, batchesData] = await Promise.all([
+          studentsResponse.json(),
+          coursesResponse.json(),
+          batchesResponse.json()
+        ]);
+        
+        // Process courses data
+        let coursesArr = [];
+        if (Array.isArray(coursesData)) {
+          coursesArr = coursesData;
+        } else if (coursesData.success && Array.isArray(coursesData.data)) {
+          coursesArr = coursesData.data;
+        }
+        setCourses(coursesArr);
+
+        // Process batches data
+        let batchesArr = [];
+        if (Array.isArray(batchesData)) {
+          batchesArr = batchesData;
+        } else if (batchesData.success && Array.isArray(batchesData.data)) {
+          batchesArr = batchesData.data;
+        }
+        setBatches(batchesArr);
+        
+        // Normalize students data and match with courses/batches
+        const toUiStudent = (s) => {
+          // Find course name by ID
+          const course = coursesArr.find(c => c.id === s.courseId || c.courseId === s.courseId);
+          const courseName = course ? course.name || course.courseName : (s.course || s.courseName || `Course ${s.courseId}`);
+
+          // Find batch name by ID
+          const batch = batchesArr.find(b => b.id === s.batchId || b.batchId === s.batchId);
+          const batchName = batch ? batch.name || batch.batchName : (s.batch || s.batchName || `Batch ${s.batchId}`);
+
+          return {
+            id: s.id ?? s.studentId ?? s.student_id,
+            name: s.name ?? s.studentName,
+            email: s.email ?? s.studentEmail,
+            phone: s.phone ?? s.studentMobile,
+            course: courseName,
+            batch: batchName,
+            totalFees: s.totalFees ?? s.courseFee ?? 0,
+            pendingFees: s.pendingFees ?? (s.courseFee ?? 0),
+            courseId: s.courseId,
+            batchId: s.batchId,
+          };
+        };
 
         let studentsArr = [];
-        if (Array.isArray(data)) {
-          studentsArr = data.map(toUiStudent);
-        } else if (data.success && Array.isArray(data.data)) {
-          studentsArr = data.data.map(toUiStudent);
+        if (Array.isArray(studentsData)) {
+          studentsArr = studentsData.map(toUiStudent);
+        } else if (studentsData.success && Array.isArray(studentsData.data)) {
+          studentsArr = studentsData.data.map(toUiStudent);
         }
 
         if (studentsArr.length > 0) {
@@ -54,15 +101,15 @@ const PaymentsPage = () => {
           toast.error('No students found');
         }
       } catch (error) {
-        console.error('Error fetching students:', error);
-        toast.error('Error loading students');
+        console.error('Error fetching data:', error);
+        toast.error('Error loading data');
         setStudents([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStudents();
+    fetchData();
   }, []);
 
   const filteredStudents = students.filter(student =>
@@ -70,6 +117,22 @@ const PaymentsPage = () => {
     student.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.course?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Pagination logic
+  const indexOfLastStudent = currentPage * studentsPerPage;
+  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
+  const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
+  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
+
+  // Pagination handlers
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Reset pagination when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -114,14 +177,14 @@ const PaymentsPage = () => {
                     Loading...
                   </td>
                 </tr>
-              ) : filteredStudents.length === 0 ? (
+              ) : currentStudents.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="text-center p-4">
                     No students found.
                   </td>
                 </tr>
               ) : (
-                filteredStudents.map((student) => (
+                currentStudents.map((student) => (
                   <tr key={student.id} className="border-t">
                     <td className="p-2 border font-medium">{student.name}</td>
                     <td className="p-2 border">{student.email}</td>
@@ -157,6 +220,46 @@ const PaymentsPage = () => {
               )}
             </tbody>
           </table>
+          
+          {/* Pagination Controls */}
+          {!loading && filteredStudents.length > 0 && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-gray-700">
+                Showing {indexOfFirstStudent + 1} to {Math.min(indexOfLastStudent, filteredStudents.length)} of {filteredStudents.length} students
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
+                  <Button
+                    key={pageNumber}
+                    variant={currentPage === pageNumber ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(pageNumber)}
+                    className={currentPage === pageNumber ? "bg-black text-white" : ""}
+                  >
+                    {pageNumber}
+                  </Button>
+                ))}
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

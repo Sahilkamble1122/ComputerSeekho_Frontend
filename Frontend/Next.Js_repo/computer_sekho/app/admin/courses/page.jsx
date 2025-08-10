@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 
 export default function CoursePage() {
   const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [activeTab, setActiveTab] = useState("courses");
   const [formVisible, setFormVisible] = useState(false);
   const [formData, setFormData] = useState({
     courseId: "",
@@ -15,19 +17,44 @@ export default function CoursePage() {
     coverPhoto: "",
     videoId: "",
   });
+  const [batchFormData, setBatchFormData] = useState({
+    batchId: null,
+    batchName: "",
+    batchStartTime: "",
+    batchEndTime: "",
+    courseId: "",
+    presentationDate: "",
+    courseFees: "",
+    courseFeesFrom: "",
+    courseFeesTo: "",
+    batchIsActive: true,
+    batchLogo: "",
+  });
   const [coverPhotoFile, setCoverPhotoFile] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
+  const [batchLogoFile, setBatchLogoFile] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const API_BASE = "http://localhost:8080/api/courses";
+  const [batchSearchTerm, setBatchSearchTerm] = useState("");
+  
+  // Pagination state for courses
+  const [currentCoursePage, setCurrentCoursePage] = useState(1);
+  const [coursesPerPage] = useState(10);
+  
+  // Pagination state for batches
+  const [currentBatchPage, setCurrentBatchPage] = useState(1);
+  const [batchesPerPage] = useState(10);
+  
+  const API_BASE = "http://localhost:8080/api";
 
   useEffect(() => {
     fetchCourses();
+    fetchBatches();
   }, []);
 
   const fetchCourses = async () => {
     try {
       const token = sessionStorage.getItem("token");
-      const response = await fetch(API_BASE, {
+      const response = await fetch(`${API_BASE}/courses`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -37,10 +64,31 @@ export default function CoursePage() {
     }
   };
 
+  const fetchBatches = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/batches`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setBatches(data);
+    } catch (error) {
+      console.error("Error fetching batches:", error);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
+
+  const handleBatchChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setBatchFormData({
+      ...batchFormData,
       [name]: type === "checkbox" ? checked : value,
     });
   };
@@ -130,6 +178,79 @@ export default function CoursePage() {
     }
   };
 
+  const handleBatchSubmit = async (e) => {
+    e.preventDefault();
+    
+    let logoPath = batchFormData.batchLogo || "";
+
+    // Upload logo if new file is selected
+    if (batchLogoFile) {
+      const formData = new FormData();
+      formData.append("file", batchLogoFile);
+
+      try {
+        const res = await fetch("/api/uploadBatchLogo", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) throw new Error("Upload failed");
+
+        const data = await res.json();
+        logoPath = data.path;
+      } catch (error) {
+        alert("Logo upload failed. Please try again.");
+        return;
+      }
+    }
+
+    const method = batchFormData.batchId ? "PUT" : "POST";
+    const url = batchFormData.batchId
+      ? `${API_BASE}/batches/${batchFormData.batchId}`
+      : `${API_BASE}/batches`;
+
+    const batchData = {
+      ...batchFormData,
+      batchLogo: logoPath,
+    };
+
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(batchData),
+      });
+
+      if (res.ok) {
+        alert(`✅ Batch ${batchFormData.batchId ? "updated" : "created"} successfully!`);
+        setBatchFormData({
+          batchId: null,
+          batchName: "",
+          batchStartTime: "",
+          batchEndTime: "",
+          courseId: "",
+          presentationDate: "",
+          courseFees: "",
+          courseFeesFrom: "",
+          courseFeesTo: "",
+          batchIsActive: true,
+          batchLogo: "",
+        });
+        setBatchLogoFile(null);
+        setFormVisible(false);
+        fetchBatches();
+      } else {
+        alert("❌ Failed to save batch.");
+      }
+    } catch (err) {
+      console.error("Error saving batch", err);
+    }
+  };
+
   const handleEdit = (course) => {
     setFormVisible(true);
     setFormData({
@@ -143,7 +264,7 @@ export default function CoursePage() {
     if (!window.confirm("Are you sure you want to delete this course?")) return;
     try {
       const token = sessionStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/${courseId}`, {
+      const res = await fetch(`${API_BASE}/courses/${courseId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -158,104 +279,386 @@ export default function CoursePage() {
     }
   };
 
+  const handleBatchEdit = (batch) => {
+    setFormVisible(true);
+    setBatchFormData({
+      ...batch,
+      courseFees: batch.courseFees?.toString() || "",
+    });
+  };
+
+  const handleBatchLogoChange = (e) => {
+    const file = e.target.files[0];
+    setBatchLogoFile(file);
+  };
+
+  const handleBatchDelete = async (batchId) => {
+    if (!window.confirm("Are you sure you want to delete this batch?")) return;
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/batches/${batchId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        fetchBatches();
+        alert("Batch deleted");
+      } else {
+        alert("Delete failed");
+      }
+    } catch (err) {
+      console.error("Error deleting batch:", err);
+    }
+  };
+
   const filteredCourses = courses.filter(
     (course) =>
       course.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       course.courseDescription.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredBatches = batches.filter((batch) =>
+    (batch.batchName || "").toLowerCase().includes(batchSearchTerm.toLowerCase())
+  );
+
+  // Pagination logic for courses
+  const indexOfLastCourse = currentCoursePage * coursesPerPage;
+  const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
+  const currentCourses = filteredCourses.slice(indexOfFirstCourse, indexOfLastCourse);
+  const totalCoursePages = Math.ceil(filteredCourses.length / coursesPerPage);
+
+  // Pagination logic for batches
+  const indexOfLastBatch = currentBatchPage * batchesPerPage;
+  const indexOfFirstBatch = indexOfLastBatch - batchesPerPage;
+  const currentBatches = filteredBatches.slice(indexOfFirstBatch, indexOfLastBatch);
+  const totalBatchPages = Math.ceil(filteredBatches.length / batchesPerPage);
+
+  // Pagination handlers for courses
+  const handleCoursePageChange = (pageNumber) => {
+    setCurrentCoursePage(pageNumber);
+  };
+
+  // Pagination handlers for batches
+  const handleBatchPageChange = (pageNumber) => {
+    setCurrentBatchPage(pageNumber);
+  };
+
+  // Reset pagination when search changes
+  useEffect(() => {
+    setCurrentCoursePage(1);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    setCurrentBatchPage(1);
+  }, [batchSearchTerm]);
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8">
-      <h1 className="text-3xl font-bold text-center text-red-600 mb-4">
-        Course Management
+      <h1 className="text-3xl font-bold text-center text-black mb-4">
+        Course & Batch Management
       </h1>
 
-      <div className="bg-white p-6 rounded shadow space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-red-600">Courses List</h2>
-          <button
-            onClick={() => setFormVisible(true)}
-            className="bg-black text-white px-4 py-2 rounded hover:opacity-90"
-          >
-            Add New
-          </button>
-        </div>
-
-        <input
-          type="text"
-          placeholder="Search by name or description"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="border p-2 rounded w-full md:w-1/2"
-        />
-
-        {filteredCourses.length === 0 ? (
-          <p className="text-gray-500">No courses found.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 border">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                    Description
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                    Duration
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                    Age Group
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredCourses.map((course) => (
-                  <tr key={course.courseId}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {course.courseName}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {course.courseDescription}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {course.courseDuration} days
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {course.ageGrpType}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm flex gap-4">
-                      <button
-                        onClick={() => handleEdit(course)}
-                        className="text-blue-600 underline hover:opacity-80"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(course.courseId)}
-                        className="text-red-600 underline hover:opacity-80"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      {/* Tabs */}
+      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+        <button
+          onClick={() => setActiveTab("courses")}
+          className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+            activeTab === "courses"
+              ? "bg-white text-black shadow-sm"
+              : "text-gray-600 hover:text-gray-800"
+          }`}
+        >
+          Courses
+        </button>
+        <button
+          onClick={() => setActiveTab("batches")}
+          className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+            activeTab === "batches"
+              ? "bg-white text-black shadow-sm"
+              : "text-gray-600 hover:text-gray-800"
+          }`}
+        >
+          Batches
+        </button>
       </div>
 
-      {formVisible && (
+      {/* Courses Tab Content */}
+      {activeTab === "courses" && (
+        <div className="bg-white p-6 rounded shadow space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-black">Courses List</h2>
+            <button
+              onClick={() => setFormVisible(true)}
+              className="bg-black text-white px-4 py-2 rounded hover:opacity-90"
+            >
+              Add New
+            </button>
+          </div>
+
+          <input
+            type="text"
+            placeholder="Search by name or description"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border p-2 rounded w-full md:w-1/2"
+          />
+
+          {filteredCourses.length === 0 ? (
+            <p className="text-gray-500">No courses found.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 border">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                      Description
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                      Duration
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                      Age Group
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentCourses.map((course) => (
+                    <tr key={course.courseId}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {course.courseName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {course.courseDescription}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {course.courseDuration} days
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {course.ageGrpType}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm flex gap-4">
+                        <button
+                          onClick={() => handleEdit(course)}
+                          className="text-blue-600 underline hover:opacity-80"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(course.courseId)}
+                          className="text-black underline hover:opacity-80"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              
+              {/* Courses Pagination */}
+              {totalCoursePages > 1 && (
+                <div className="flex justify-center items-center space-x-2 mt-4">
+                  <button
+                    onClick={() => handleCoursePageChange(currentCoursePage - 1)}
+                    disabled={currentCoursePage === 1}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  
+                  {Array.from({ length: totalCoursePages }, (_, index) => index + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handleCoursePageChange(page)}
+                      className={`px-3 py-2 text-sm font-medium rounded-md ${
+                        currentCoursePage === page
+                          ? "bg-black text-white"
+                          : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  
+                  <button
+                    onClick={() => handleCoursePageChange(currentCoursePage + 1)}
+                    disabled={currentCoursePage === totalCoursePages}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+              
+              <div className="text-sm text-gray-500 text-center mt-2">
+                Showing {indexOfFirstCourse + 1} to {Math.min(indexOfLastCourse, filteredCourses.length)} of {filteredCourses.length} courses
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Batches Tab Content */}
+      {activeTab === "batches" && (
+        <div className="bg-white p-6 rounded shadow space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-black">Batches List</h2>
+            <button
+              onClick={() => setFormVisible(true)}
+              className="bg-black text-white px-4 py-2 rounded hover:opacity-90"
+            >
+              Add New Batch
+            </button>
+          </div>
+
+          <input
+            type="text"
+            placeholder="Search by batch name"
+            value={batchSearchTerm}
+            onChange={(e) => setBatchSearchTerm(e.target.value)}
+            className="border p-2 rounded w-full md:w-1/2"
+          />
+
+          {filteredBatches.length === 0 ? (
+            <p className="text-gray-500">No batches found.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 border">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                      Batch ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                      Time
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                      Course
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                      Fees
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                      Presentation
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentBatches.map((batch) => (
+                    <tr key={batch.batchId}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {batch.batchId}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {batch.batchName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {batch.batchStartTime} - {batch.batchEndTime}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {batch.courseId}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        ₹{batch.courseFees}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {batch.presentationDate}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            batch.batchIsActive
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {batch.batchIsActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm flex gap-4">
+                        <button
+                          onClick={() => handleBatchEdit(batch)}
+                          className="text-blue-600 underline hover:opacity-80"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleBatchDelete(batch.batchId)}
+                          className="text-black underline hover:opacity-80"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              
+              {/* Batches Pagination */}
+              {totalBatchPages > 1 && (
+                <div className="flex justify-center items-center space-x-2 mt-4">
+                  <button
+                    onClick={() => handleBatchPageChange(currentBatchPage - 1)}
+                    disabled={currentBatchPage === 1}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  
+                  {Array.from({ length: totalBatchPages }, (_, index) => index + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handleBatchPageChange(page)}
+                      className={`px-3 py-2 text-sm font-medium rounded-md ${
+                        currentBatchPage === page
+                          ? "bg-black text-white"
+                          : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  
+                  <button
+                    onClick={() => handleBatchPageChange(currentBatchPage + 1)}
+                    disabled={currentBatchPage === totalBatchPages}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+              
+              <div className="text-sm text-gray-500 text-center mt-2">
+                Showing {indexOfFirstBatch + 1} to {Math.min(indexOfLastBatch, filteredBatches.length)} of {filteredBatches.length} batches
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Course Form - Only show when courses tab is active */}
+      {formVisible && activeTab === "courses" && (
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded shadow space-y-4"
         >
-          <h2 className="text-xl font-semibold text-red-600">
+          <h2 className="text-xl font-semibold text-black">
             {formData.courseId ? "Edit Course" : "Add New Course"}
           </h2>
 
@@ -335,7 +738,7 @@ export default function CoursePage() {
               name="courseIsActive"
               checked={formData.courseIsActive}
               onChange={handleChange}
-              style={{ accentColor: "rgb(236,28,35)" }}
+              style={{ accentColor: "rgb(0,0,0)" }}
             />
             <span>Is Active?</span>
           </label>
@@ -343,9 +746,166 @@ export default function CoursePage() {
           <button
             type="submit"
             className="text-white px-6 py-2 rounded hover:opacity-90"
-            style={{ backgroundColor: "rgb(236,28,35)" }}
+            style={{ backgroundColor: "rgb(0,0,0)" }}
           >
             {formData.courseId ? "Update Course" : "Add Course"}
+          </button>
+        </form>
+      )}
+
+      {/* Batch Form - Only show when batches tab is active */}
+      {formVisible && activeTab === "batches" && (
+        <form
+          onSubmit={handleBatchSubmit}
+          className="bg-white p-6 rounded shadow space-y-6"
+        >
+          <h2 className="text-xl font-semibold text-black mb-2">
+            {batchFormData.batchId ? "Edit Batch" : "Create New Batch"}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block mb-1 font-medium text-gray-700">
+                Batch Name
+              </label>
+              <input
+                type="text"
+                name="batchName"
+                value={batchFormData.batchName}
+                onChange={handleBatchChange}
+                className="border p-2 rounded w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium text-gray-700">
+                Start Time
+              </label>
+              <input
+                type="time"
+                name="batchStartTime"
+                value={batchFormData.batchStartTime}
+                onChange={handleBatchChange}
+                className="border p-2 rounded w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium text-gray-700">
+                End Time
+              </label>
+              <input
+                type="time"
+                name="batchEndTime"
+                value={batchFormData.batchEndTime}
+                onChange={handleBatchChange}
+                className="border p-2 rounded w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium text-gray-700">
+                Course
+              </label>
+              <select
+                name="courseId"
+                value={batchFormData.courseId}
+                onChange={handleBatchChange}
+                className="border p-2 rounded w-full"
+                required
+              >
+                <option value="">-- Select Course --</option>
+                {courses.map((c) => (
+                  <option key={c.courseId} value={c.courseId}>
+                    {c.courseId} - {c.courseName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block mb-1 font-medium text-gray-700">
+                Presentation Date
+              </label>
+              <input
+                type="datetime-local"
+                name="presentationDate"
+                value={batchFormData.presentationDate}
+                onChange={handleBatchChange}
+                className="border p-2 rounded w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium text-gray-700">
+                Total Fees
+              </label>
+              <input
+                type="number"
+                name="courseFees"
+                value={batchFormData.courseFees}
+                onChange={handleBatchChange}
+                className="border p-2 rounded w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium text-gray-700">
+                Fees From
+              </label>
+              <input
+                type="date"
+                name="courseFeesFrom"
+                value={batchFormData.courseFeesFrom}
+                onChange={handleBatchChange}
+                className="border p-2 rounded w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium text-gray-700">
+                Batch Logo
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleBatchLogoChange}
+              />
+              {batchFormData.batchLogo && (
+                <img
+                  src={batchFormData.batchLogo}
+                  alt="Batch Logo"
+                  className="mt-2 w-24 h-24 object-contain border"
+                />
+              )}
+            </div>
+            <div>
+              <label className="block mb-1 font-medium text-gray-700">
+                Fees To
+              </label>
+              <input
+                type="date"
+                name="courseFeesTo"
+                value={batchFormData.courseFeesTo}
+                onChange={handleBatchChange}
+                className="border p-2 rounded w-full"
+                required
+              />
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              name="batchIsActive"
+              checked={batchFormData.batchIsActive}
+              onChange={handleBatchChange}
+              className="accent-black"
+            />
+            <label className="text-gray-700 font-medium">Is Active</label>
+          </div>
+          <button
+            type="submit"
+            className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800"
+          >
+            {batchFormData.batchId ? "Update" : "Submit"}
           </button>
         </form>
       )}
