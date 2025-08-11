@@ -10,16 +10,39 @@ export default function HomeGallerySection() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/albums") // Replace with your backend API
+    fetch("/api/albums") // Use relative path to our Next.js API
       .then((res) => res.json())
-      .then((data) => setAlbums(data.slice(0, 3))) // Top 3
+      .then((data) => {
+        setAlbums(data.slice(0, 3)); // Top 3
+      })
       .catch((err) => console.error("Error fetching albums", err));
   }, []);
 
   const getImageUrl = (album) => {
-    if (album.coverPhoto?.startsWith("http")) return album.coverPhoto;
-    if (album.coverPhoto?.startsWith("/images/")) return album.coverPhoto;
-    if (album.coverPhoto) return `/images/${album.coverPhoto}`;
+    console.log("Album data for image URL:", album); // Debug log
+    
+    // Check if album has a cover image from the images table
+    if (album.coverImage) {
+      console.log("Using coverImage:", album.coverImage);
+      return album.coverImage;
+    }
+    
+    // Fallback to coverPhoto if it exists (legacy support)
+    if (album.coverPhoto?.startsWith("http")) {
+      console.log("Using coverPhoto (http):", album.coverPhoto);
+      return album.coverPhoto;
+    }
+    if (album.coverPhoto?.startsWith("/images/")) {
+      console.log("Using coverPhoto (/images/):", album.coverPhoto);
+      return album.coverPhoto;
+    }
+    if (album.coverPhoto) {
+      console.log("Using coverPhoto (relative):", `/images/${album.coverPhoto}`);
+      return `/images/${album.coverPhoto}`;
+    }
+    
+    // Default fallback
+    console.log("Using default image");
     return "/default-profile.png";
   };
 

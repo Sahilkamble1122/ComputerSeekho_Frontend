@@ -22,6 +22,7 @@ export async function GET(request) {
       
       if (imagesResponse.ok) {
         allImages = await imagesResponse.json();
+        console.log('Fetched images from backend:', allImages.length, 'images');
       } else {
         console.warn(`Images backend error: ${imagesResponse.status}, proceeding without cover images`);
       }
@@ -32,13 +33,61 @@ export async function GET(request) {
     // Enhance albums with cover images
     const albumsWithCovers = albums.map(album => {
       // Find the cover image for this album
-      const coverImage = allImages.find(img => 
-        img.albumId === album.albumId && img.isAlbumCover === true
-      );
+      const coverImage = allImages.find(img => {
+        // Handle both string and number types for albumId
+        const imgAlbumId = typeof img.albumId === 'string' ? parseInt(img.albumId) : img.albumId;
+        const albumId = typeof album.albumId === 'string' ? parseInt(album.albumId) : album.albumId;
+        
+        return imgAlbumId === albumId && img.isAlbumCover === true;
+      });
+
+      console.log(`Album ${album.albumId} (${album.albumName}):`, {
+        hasCoverImage: !!coverImage,
+        coverImageData: coverImage,
+        allImagesForAlbum: allImages.filter(img => {
+          const imgAlbumId = typeof img.albumId === 'string' ? parseInt(img.albumId) : img.albumId;
+          const albumId = typeof album.albumId === 'string' ? parseInt(album.albumId) : album.albumId;
+          return imgAlbumId === albumId;
+        })
+      });
+
+      // Construct the cover image URL properly
+      let coverImageUrl = null;
+      if (coverImage) {
+        if (coverImage.imagePath) {
+          // Handle both full paths and just filenames
+          if (coverImage.imagePath.startsWith('images/')) {
+            coverImageUrl = `/${coverImage.imagePath}`;
+          } else if (coverImage.imagePath.includes('/')) {
+            coverImageUrl = `/images/${coverImage.imagePath.split('/').pop()}`;
+          } else {
+            coverImageUrl = `/images/${coverImage.imagePath}`;
+          }
+          console.log(`Constructed cover URL for album ${album.albumId}:`, coverImageUrl);
+        }
+      } else {
+        // Fallback: use the first image from the album if no cover image is set
+        const firstImage = allImages.find(img => {
+          const imgAlbumId = typeof img.albumId === 'string' ? parseInt(img.albumId) : img.albumId;
+          const albumId = typeof album.albumId === 'string' ? parseInt(album.albumId) : album.albumId;
+          return imgAlbumId === albumId;
+        });
+        
+        if (firstImage && firstImage.imagePath) {
+          if (firstImage.imagePath.startsWith('images/')) {
+            coverImageUrl = `/${firstImage.imagePath}`;
+          } else if (firstImage.imagePath.includes('/')) {
+            coverImageUrl = `/images/${firstImage.imagePath.split('/').pop()}`;
+          } else {
+            coverImageUrl = `/images/${firstImage.imagePath}`;
+          }
+          console.log(`Using fallback image for album ${album.albumId}:`, coverImageUrl);
+        }
+      }
 
       return {
         ...album,
-        coverImage: coverImage ? `/images/${coverImage.imagePath.split('/').pop()}` : null
+        coverImage: coverImageUrl
       };
     });
 
