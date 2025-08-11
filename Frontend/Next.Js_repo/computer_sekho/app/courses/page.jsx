@@ -46,6 +46,7 @@ export default function CoursesPage() {
     if (photoPath.startsWith("/courses/")) return photoPath;
     return `/courses/${photoPath}`;
   };
+  
 
   return (
     <>
@@ -69,6 +70,7 @@ export default function CoursesPage() {
                   src={getCoverPhotoUrl(course.coverPhoto)}
                   alt={course.courseName || "Course Cover"}
                   fill
+                  unoptimized
                   className="object-cover"
                   onError={(e) => {
                     e.target.src = "/default-profile.png";

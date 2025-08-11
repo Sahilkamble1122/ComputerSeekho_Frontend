@@ -11,6 +11,7 @@ export default function CourseCard({ course }) {
     if (photoPath.startsWith("http")) return photoPath;
     if (photoPath.startsWith("/courses/")) return photoPath;
     return `/courses/${photoPath}`;
+     
   };
 
   const imageSrc = getCoverPhotoUrl(course.coverPhoto);
