@@ -45,6 +45,8 @@ const PaymentsPage = () => {
           batchesResponse.json()
         ]);
         
+        console.log('API Responses:', { studentsData, coursesData, batchesData });
+        
         // Process courses data
         let coursesArr = [];
         if (Array.isArray(coursesData)) {
@@ -88,14 +90,41 @@ const PaymentsPage = () => {
         };
 
         let studentsArr = [];
+        console.log('Raw studentsData:', studentsData);
+        console.log('studentsData type:', typeof studentsData);
+        console.log('studentsData isArray:', Array.isArray(studentsData));
+        
         if (Array.isArray(studentsData)) {
           studentsArr = studentsData.map(toUiStudent);
         } else if (studentsData.success && Array.isArray(studentsData.data)) {
           studentsArr = studentsData.data.map(toUiStudent);
         }
+        
+        console.log('Processed studentsArr:', studentsArr);
 
         if (studentsArr.length > 0) {
-          setStudents(studentsArr);
+          console.log('Students array before sorting:', studentsArr);
+          
+          // Sort students by pending fees in descending order (highest pending fees first)
+          const sortedStudents = studentsArr.sort((a, b) => {
+            // First priority: students with pending fees > 0
+            if (a.pendingFees > 0 && b.pendingFees === 0) return -1;
+            if (a.pendingFees === 0 && b.pendingFees > 0) return 1;
+            
+            // Second priority: among students with pending fees, sort by amount (highest first)
+            if (a.pendingFees > 0 && b.pendingFees > 0) {
+              return b.pendingFees - a.pendingFees;
+            }
+            
+            // Third priority: among students with no pending fees, sort by name
+            // Handle null/undefined names safely
+            const nameA = a.name || '';
+            const nameB = b.name || '';
+            return nameA.localeCompare(nameB);
+          });
+          
+          console.log('Students array after sorting:', sortedStudents);
+          setStudents(sortedStudents);
         } else {
           setStudents([]);
           toast.error('No students found');
@@ -123,6 +152,14 @@ const PaymentsPage = () => {
   const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
   const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
   const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
+
+  console.log('Current state:', { 
+    students: students.length, 
+    filteredStudents: filteredStudents.length, 
+    currentStudents: currentStudents.length,
+    loading,
+    searchTerm 
+  });
 
   // Pagination handlers
   const handlePageChange = (pageNumber) => {

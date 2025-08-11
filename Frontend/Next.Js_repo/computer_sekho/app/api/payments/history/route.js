@@ -21,8 +21,8 @@ export async function GET(request) {
       );
     }
 
-    // Fetch receipts for the student
-    const receiptsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/receipts?studentId=${studentId}`, {
+    // Fetch all receipts and filter by studentId on the frontend
+    const receiptsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/receipts`, {
       headers: {
         'Authorization': authHeader,
         'Content-Type': 'application/json'
@@ -36,20 +36,30 @@ export async function GET(request) {
       );
     }
 
-    const receipts = await receiptsResponse.json();
+    const allReceipts = await receiptsResponse.json();
+    
+    // Filter receipts by studentId on the frontend
+    const receipts = Array.isArray(allReceipts) 
+      ? allReceipts.filter(receipt => String(receipt.studentId) === String(studentId))
+      : (allReceipts.data || []).filter(receipt => String(receipt.studentId) === String(studentId));
 
-    // Fetch payments for additional details
-    const paymentsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/payments?studentId=${studentId}`, {
+    // Fetch payments for additional details (also filter by studentId)
+    const paymentsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/payments`, {
       headers: {
         'Authorization': authHeader,
         'Content-Type': 'application/json'
       }
     });
 
-    let payments = [];
+    let allPayments = [];
     if (paymentsResponse.ok) {
-      payments = await paymentsResponse.json();
+      allPayments = await paymentsResponse.json();
     }
+    
+    // Filter payments by studentId on the frontend
+    const payments = Array.isArray(allPayments)
+      ? allPayments.filter(payment => String(payment.studentId) === String(studentId))
+      : (allPayments.data || []).filter(payment => String(payment.studentId) === String(studentId));
 
     // Combine receipt and payment data
     const paymentHistory = receipts.map(receipt => {

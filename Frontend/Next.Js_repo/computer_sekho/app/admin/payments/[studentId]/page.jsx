@@ -58,8 +58,8 @@ const StudentPaymentDashboard = () => {
           toast.error('Student not found');
         }
         
-        // Fetch receipts directly by studentId
-        const receiptsResponse = await fetch(getApiUrl(`${API_CONFIG.ENDPOINTS.PAYMENT_HISTORY}?studentId=${studentId}`), {
+        // Fetch receipts using local API route that filters by studentId
+        const receiptsResponse = await fetch(`/api/payments/history?studentId=${studentId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -67,8 +67,8 @@ const StudentPaymentDashboard = () => {
         
         if (receiptsResponse.ok) {
           const receiptsData = await receiptsResponse.json();
-          // Handle different response formats
-          const receipts = Array.isArray(receiptsData) ? receiptsData : (receiptsData.data || []);
+          // Handle the response format from our local API
+          const receipts = receiptsData.success && receiptsData.data ? receiptsData.data : [];
           setPaymentHistory(receipts);
         } else {
           console.error('Failed to fetch receipts');
