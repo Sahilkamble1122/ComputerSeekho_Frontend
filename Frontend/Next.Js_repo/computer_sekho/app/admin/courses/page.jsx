@@ -15,7 +15,7 @@ export default function CoursePage() {
     ageGrpType: "",
     courseIsActive: true,
     coverPhoto: "",
-    videoId: "",
+    videoId: null,
   });
   const [batchFormData, setBatchFormData] = useState({
     batchId: null,
@@ -31,10 +31,12 @@ export default function CoursePage() {
     batchLogo: "",
   });
   const [coverPhotoFile, setCoverPhotoFile] = useState(null);
-  const [videoFile, setVideoFile] = useState(null);
   const [batchLogoFile, setBatchLogoFile] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [batchSearchTerm, setBatchSearchTerm] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitSuccess, setSubmitSuccess] = useState("");
   
   // Pagination state for courses
   const [currentCoursePage, setCurrentCoursePage] = useState(1);
@@ -57,6 +59,15 @@ export default function CoursePage() {
       const response = await fetch(`${API_BASE}/courses`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.error("Backend API endpoint not found. Please ensure your Spring Boot backend is running.");
+          return;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
       setCourses(data);
     } catch (error) {
@@ -70,6 +81,15 @@ export default function CoursePage() {
       const response = await fetch(`${API_BASE}/batches`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.error("Backend API endpoint not found. Please ensure your Spring Boot backend is running.");
+          return;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
       setBatches(data);
     } catch (error) {
@@ -98,11 +118,6 @@ export default function CoursePage() {
     setCoverPhotoFile(file);
   };
 
-  const handleVideoChange = (e) => {
-    const file = e.target.files[0];
-    setVideoFile(file);
-  };
-
   const uploadFile = async (file) => {
     if (!file) return "";
     const formData = new FormData();
@@ -118,7 +133,6 @@ export default function CoursePage() {
 
       if (res.ok) {
         const data = await res.json();
-        // IMPORTANT: yaha `filePath` hai, `filepath` nahi
         return data.filePath || "";
       }
     } catch (err) {
@@ -127,59 +141,185 @@ export default function CoursePage() {
     return "";
   };
 
+  const resetCourseForm = () => {
+    setFormData({
+      courseId: "",
+      courseName: "",
+      courseDescription: "",
+      courseDuration: "",
+      courseSyllabus: "",
+      ageGrpType: "",
+      courseIsActive: true,
+      coverPhoto: "",
+      videoId: null,
+    });
+    setCoverPhotoFile(null);
+  };
+
+  const resetBatchForm = () => {
+    setBatchFormData({
+      batchId: null,
+      batchName: "",
+      batchStartTime: "",
+      batchEndTime: "",
+      courseId: "",
+      presentationDate: "",
+      courseFees: "",
+      courseFeesFrom: "",
+      courseFeesTo: "",
+      batchIsActive: true,
+      batchLogo: "",
+    });
+    setBatchLogoFile(null);
+  };
+
+  const closeForm = () => {
+    setFormVisible(false);
+    if (activeTab === "courses") {
+      resetCourseForm();
+    } else {
+      resetBatchForm();
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    setIsSubmitting(true);
+    setSubmitError("");
+    
+    // Validate required fields
+    if (!formData.courseName || !formData.courseDescription || !formData.courseDuration || !formData.courseSyllabus || !formData.ageGrpType) {
+      setSubmitError("Please fill in all required fields: Course Name, Description, Duration, Syllabus, and Age Group");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate field lengths and formats
+    if (formData.courseName.trim().length < 2 || formData.courseName.trim().length > 100) {
+      setSubmitError("Course name must be between 2 and 100 characters");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.courseDescription.trim().length > 1000) {
+      setSubmitError("Course description must not exceed 1000 characters");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.courseSyllabus.trim().length > 2000) {
+      setSubmitError("Course syllabus must not exceed 2000 characters");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate course duration is a positive number
+    const duration = parseInt(formData.courseDuration);
+    if (isNaN(duration) || duration <= 0) {
+      setSubmitError("Course duration must be a positive number");
+      setIsSubmitting(false);
+      return;
+    }
+
     const uploadedCoverPath = await uploadFile(coverPhotoFile);
-    const uploadedVideoPath = await uploadFile(videoFile);
 
     const payload = {
-      ...formData,
-      courseDuration: parseInt(formData.courseDuration),
-      videoId: uploadedVideoPath || formData.videoId,
-      coverPhoto: uploadedCoverPath || formData.coverPhoto,
+      courseId: formData.courseId || null,
+      courseName: formData.courseName.trim(),
+      courseDescription: formData.courseDescription.trim(),
+      courseDuration: duration,
+      courseSyllabus: formData.courseSyllabus.trim(),
+      ageGrpType: formData.ageGrpType.trim(),
+      courseIsActive: formData.courseIsActive,
+      coverPhoto: uploadedCoverPath || formData.coverPhoto || "",
+      videoId: null,
     };
 
     try {
       const token = sessionStorage.getItem("token");
-      const response = await fetch(
-        formData.courseId ? `${API_BASE}/${formData.courseId}` : API_BASE,
-        {
-          method: formData.courseId ? "PUT" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      
+      if (!token) {
+        setSubmitError("Authentication token not found. Please log in again.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      const url = formData.courseId 
+        ? `${API_BASE}/courses/${formData.courseId}` 
+        : `${API_BASE}/courses`;
+      
+      let requestBody;
+      try {
+        requestBody = JSON.stringify(payload);
+      } catch (serializeError) {
+        console.error("Error serializing payload:", serializeError);
+        setSubmitError("Error preparing data for submission");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      const response = await fetch(url, {
+        method: formData.courseId ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "Accept": "application/json",
+          "Cache-Control": "no-cache"
+        },
+        body: requestBody,
+      });
 
       if (response.ok) {
-        alert(formData.courseId ? "Course Updated" : "Course Added");
-        setFormData({
-          courseId: "",
-          courseName: "",
-          courseDescription: "",
-          courseDuration: "",
-          courseSyllabus: "",
-          ageGrpType: "",
-          courseIsActive: true,
-          coverPhoto: "",
-          videoId: "",
-        });
-        setCoverPhotoFile(null);
-        setVideoFile(null);
-        setFormVisible(false);
-        fetchCourses();
+        setSubmitSuccess(formData.courseId ? "Course Updated Successfully!" : "Course Added Successfully!");
+        setTimeout(() => {
+          resetCourseForm();
+          closeForm();
+          fetchCourses();
+        }, 1500);
       } else {
-        alert("Save failed");
+        let errorMessage = 'Unknown error';
+        let responseText = '';
+        
+        try {
+          responseText = await response.text();
+          
+          if (responseText && responseText.trim()) {
+            try {
+              const errorData = JSON.parse(responseText);
+              errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+            } catch (jsonParseError) {
+              errorMessage = responseText;
+            }
+          } else {
+            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          }
+        } catch (textError) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        
+        if (response.status === 400) {
+          setSubmitError(`Bad Request: ${errorMessage}. Please check your input data.`);
+        } else {
+          setSubmitError(`Save failed: ${errorMessage}`);
+        }
       }
     } catch (err) {
       console.error("Error saving course:", err);
+      setSubmitError("Error saving course. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleBatchSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!batchFormData.batchName || !batchFormData.courseId || !batchFormData.courseFees) {
+      alert("Please fill in all required fields");
+      return;
+    }
     
     let logoPath = batchFormData.batchLogo || "";
 
@@ -227,27 +367,16 @@ export default function CoursePage() {
 
       if (res.ok) {
         alert(`✅ Batch ${batchFormData.batchId ? "updated" : "created"} successfully!`);
-        setBatchFormData({
-          batchId: null,
-          batchName: "",
-          batchStartTime: "",
-          batchEndTime: "",
-          courseId: "",
-          presentationDate: "",
-          courseFees: "",
-          courseFeesFrom: "",
-          courseFeesTo: "",
-          batchIsActive: true,
-          batchLogo: "",
-        });
-        setBatchLogoFile(null);
-        setFormVisible(false);
+        resetBatchForm();
+        closeForm();
         fetchBatches();
       } else {
-        alert("❌ Failed to save batch.");
+        const errorData = await res.json();
+        alert(`❌ Failed to save batch: ${errorData.message || 'Unknown error'}`);
       }
     } catch (err) {
       console.error("Error saving batch", err);
+      alert("Error saving batch. Please try again.");
     }
   };
 
@@ -255,8 +384,8 @@ export default function CoursePage() {
     setFormVisible(true);
     setFormData({
       ...course,
-      courseDuration: course.courseDuration.toString(),
-      videoId: course.videoId?.toString() || "",
+      courseDuration: course.courseDuration?.toString() || "",
+      videoId: course.videoId || null, // Handle videoId from backend
     });
   };
 
@@ -270,7 +399,7 @@ export default function CoursePage() {
       });
       if (res.ok) {
         fetchCourses();
-        alert("Course deleted");
+        alert("Course deleted successfully!");
       } else {
         alert("Delete failed");
       }
@@ -302,12 +431,12 @@ export default function CoursePage() {
       });
       if (res.ok) {
         fetchBatches();
-        alert("Batch deleted");
+        alert("Batch deleted successfully!");
       } else {
         alert("Delete failed");
       }
     } catch (err) {
-      console.error("Error deleting batch:", err);
+      console.error("Error deleting batch", err);
     }
   };
 
@@ -388,10 +517,13 @@ export default function CoursePage() {
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-black">Courses List</h2>
             <button
-              onClick={() => setFormVisible(true)}
+              onClick={() => {
+                resetCourseForm();
+                setFormVisible(true);
+              }}
               className="bg-black text-white px-4 py-2 rounded hover:opacity-90"
             >
-              Add New
+              Add New Course
             </button>
           </div>
 
@@ -434,7 +566,15 @@ export default function CoursePage() {
                         {course.courseName}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {course.courseDescription}
+                        <span 
+                          title={course.courseDescription}
+                          className="cursor-help"
+                        >
+                          {course.courseDescription.length > 50 
+                            ? `${course.courseDescription.substring(0, 50)}...` 
+                            : course.courseDescription
+                          }
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {course.courseDuration} days
@@ -451,7 +591,7 @@ export default function CoursePage() {
                         </button>
                         <button
                           onClick={() => handleDelete(course.courseId)}
-                          className="text-black underline hover:opacity-80"
+                          className="text-red-600 underline hover:opacity-80"
                         >
                           Delete
                         </button>
@@ -510,7 +650,10 @@ export default function CoursePage() {
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-black">Batches List</h2>
             <button
-              onClick={() => setFormVisible(true)}
+              onClick={() => {
+                resetBatchForm();
+                setFormVisible(true);
+              }}
               className="bg-black text-white px-4 py-2 rounded hover:opacity-90"
             >
               Add New Batch
@@ -599,7 +742,7 @@ export default function CoursePage() {
                         </button>
                         <button
                           onClick={() => handleBatchDelete(batch.batchId)}
-                          className="text-black underline hover:opacity-80"
+                          className="text-red-600 underline hover:opacity-80"
                         >
                           Delete
                         </button>
@@ -654,260 +797,315 @@ export default function CoursePage() {
 
       {/* Course Form - Only show when courses tab is active */}
       {formVisible && activeTab === "courses" && (
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-6 rounded shadow space-y-4"
-        >
-          <h2 className="text-xl font-semibold text-black">
-            {formData.courseId ? "Edit Course" : "Add New Course"}
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="block">
-              <span className="text-gray-700">Course Name</span>
-              <input
-                type="text"
-                name="courseName"
-                value={formData.courseName}
-                onChange={handleChange}
-                className="border p-2 rounded w-full"
-                required
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-gray-700">Description</span>
-              <input
-                type="text"
-                name="courseDescription"
-                value={formData.courseDescription}
-                onChange={handleChange}
-                className="border p-2 rounded w-full"
-                required
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-gray-700">Duration (days)</span>
-              <input
-                type="number"
-                name="courseDuration"
-                value={formData.courseDuration}
-                onChange={handleChange}
-                className="border p-2 rounded w-full"
-                required
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-gray-700">Age Group Type</span>
-              <input
-                type="text"
-                name="ageGrpType"
-                value={formData.ageGrpType}
-                onChange={handleChange}
-                className="border p-2 rounded w-full"
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-gray-700">Cover Photo</span>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="border p-2 rounded w-full"
-              />
-            </label>
+        <div className="bg-white p-6 rounded shadow space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-black">
+              {formData.courseId ? "Edit Course" : "Add New Course"}
+            </h2>
+            <button
+              onClick={closeForm}
+              className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+            >
+              ×
+            </button>
           </div>
 
-          <label className="block">
-            <span className="text-gray-700">Syllabus</span>
-            <textarea
-              name="courseSyllabus"
-              value={formData.courseSyllabus}
-              onChange={handleChange}
-              className="border rounded p-2 w-full"
-              rows={3}
-            ></textarea>
-          </label>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="block">
+                <span className="text-gray-700">Course Name *</span>
+                <input
+                  type="text"
+                  name="courseName"
+                  value={formData.courseName}
+                  onChange={handleChange}
+                  className="border p-2 rounded w-full"
+                  required
+                />
+              </label>
 
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="courseIsActive"
-              checked={formData.courseIsActive}
-              onChange={handleChange}
-              style={{ accentColor: "rgb(0,0,0)" }}
-            />
-            <span>Is Active?</span>
-          </label>
+              <label className="block">
+                <span className="text-gray-700">Description *</span>
+                <input
+                  type="text"
+                  name="courseDescription"
+                  value={formData.courseDescription}
+                  onChange={handleChange}
+                  className="border p-2 rounded w-full"
+                  required
+                />
+              </label>
 
-          <button
-            type="submit"
-            className="text-white px-6 py-2 rounded hover:opacity-90"
-            style={{ backgroundColor: "rgb(0,0,0)" }}
-          >
-            {formData.courseId ? "Update Course" : "Add Course"}
-          </button>
-        </form>
+              <label className="block">
+                <span className="text-gray-700">Duration (days) *</span>
+                <input
+                  type="number"
+                  name="courseDuration"
+                  value={formData.courseDuration}
+                  onChange={handleChange}
+                  className="border p-2 rounded w-full"
+                  min="1"
+                  required
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-gray-700">Age Group Type *</span>
+                <input
+                  type="text"
+                  name="ageGrpType"
+                  value={formData.ageGrpType}
+                  onChange={handleChange}
+                  className="border p-2 rounded w-full"
+                  placeholder="e.g., 20-30, Adults, Teens, etc."
+                  required
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-gray-700">Cover Photo</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="border p-2 rounded w-full"
+                />
+                {formData.coverPhoto && (
+                  <img
+                    src={formData.coverPhoto}
+                    alt="Current cover"
+                    className="mt-2 w-24 h-24 object-cover border rounded"
+                  />
+                )}
+              </label>
+            </div>
+
+            <label className="block">
+              <span className="text-gray-700">Syllabus *</span>
+              <textarea
+                name="courseSyllabus"
+                value={formData.courseSyllabus}
+                onChange={handleChange}
+                className="border rounded p-2 w-full"
+                rows={3}
+                placeholder="Enter course syllabus..."
+                required
+              ></textarea>
+            </label>
+
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                name="courseIsActive"
+                checked={formData.courseIsActive}
+                onChange={handleChange}
+                style={{ accentColor: "rgb(0,0,0)" }}
+              />
+              <span>Is Active?</span>
+            </label>
+
+            <div className="flex gap-4">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-black text-white px-6 py-2 rounded hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? "Saving..." : (formData.courseId ? "Update Course" : "Add Course")}
+              </button>
+              <button
+                type="button"
+                onClick={closeForm}
+                disabled={isSubmitting}
+                className="bg-gray-500 text-white px-6 py-2 rounded hover:opacity-90"
+              >
+                Cancel
+              </button>
+            </div>
+            
+            {/* Error Display */}
+            {submitError && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                <strong>Error:</strong> {submitError}
+              </div>
+            )}
+          </form>
+        </div>
       )}
 
       {/* Batch Form - Only show when batches tab is active */}
       {formVisible && activeTab === "batches" && (
-        <form
-          onSubmit={handleBatchSubmit}
-          className="bg-white p-6 rounded shadow space-y-6"
-        >
-          <h2 className="text-xl font-semibold text-black mb-2">
-            {batchFormData.batchId ? "Edit Batch" : "Create New Batch"}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">
-                Batch Name
-              </label>
-              <input
-                type="text"
-                name="batchName"
-                value={batchFormData.batchName}
-                onChange={handleBatchChange}
-                className="border p-2 rounded w-full"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">
-                Start Time
-              </label>
-              <input
-                type="time"
-                name="batchStartTime"
-                value={batchFormData.batchStartTime}
-                onChange={handleBatchChange}
-                className="border p-2 rounded w-full"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">
-                End Time
-              </label>
-              <input
-                type="time"
-                name="batchEndTime"
-                value={batchFormData.batchEndTime}
-                onChange={handleBatchChange}
-                className="border p-2 rounded w-full"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">
-                Course
-              </label>
-              <select
-                name="courseId"
-                value={batchFormData.courseId}
-                onChange={handleBatchChange}
-                className="border p-2 rounded w-full"
-                required
-              >
-                <option value="">-- Select Course --</option>
-                {courses.map((c) => (
-                  <option key={c.courseId} value={c.courseId}>
-                    {c.courseId} - {c.courseName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">
-                Presentation Date
-              </label>
-              <input
-                type="datetime-local"
-                name="presentationDate"
-                value={batchFormData.presentationDate}
-                onChange={handleBatchChange}
-                className="border p-2 rounded w-full"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">
-                Total Fees
-              </label>
-              <input
-                type="number"
-                name="courseFees"
-                value={batchFormData.courseFees}
-                onChange={handleBatchChange}
-                className="border p-2 rounded w-full"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">
-                Fees From
-              </label>
-              <input
-                type="date"
-                name="courseFeesFrom"
-                value={batchFormData.courseFeesFrom}
-                onChange={handleBatchChange}
-                className="border p-2 rounded w-full"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">
-                Batch Logo
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleBatchLogoChange}
-              />
-              {batchFormData.batchLogo && (
-                <img
-                  src={batchFormData.batchLogo}
-                  alt="Batch Logo"
-                  className="mt-2 w-24 h-24 object-contain border"
+        <div className="bg-white p-6 rounded shadow space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-black mb-2">
+              {batchFormData.batchId ? "Edit Batch" : "Create New Batch"}
+            </h2>
+            <button
+              onClick={closeForm}
+              className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+            >
+              ×
+            </button>
+          </div>
+          
+          <form onSubmit={handleBatchSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block mb-1 font-medium text-gray-700">
+                  Batch Name *
+                </label>
+                <input
+                  type="text"
+                  name="batchName"
+                  value={batchFormData.batchName}
+                  onChange={handleBatchChange}
+                  className="border p-2 rounded w-full"
+                  required
                 />
-              )}
+              </div>
+              <div>
+                <label className="block mb-1 font-medium text-gray-700">
+                  Start Time *
+                </label>
+                <input
+                  type="time"
+                  name="batchStartTime"
+                  value={batchFormData.batchStartTime}
+                  onChange={handleBatchChange}
+                  className="border p-2 rounded w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium text-gray-700">
+                  End Time *
+                </label>
+                <input
+                  type="time"
+                  name="batchEndTime"
+                  value={batchFormData.batchEndTime}
+                  onChange={handleBatchChange}
+                  className="border p-2 rounded w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium text-gray-700">
+                  Course *
+                </label>
+                <select
+                  name="courseId"
+                  value={batchFormData.courseId}
+                  onChange={handleBatchChange}
+                  className="border p-2 rounded w-full"
+                  required
+                >
+                  <option value="">-- Select Course --</option>
+                  {courses.map((c) => (
+                    <option key={c.courseId} value={c.courseId}>
+                      {c.courseId} - {c.courseName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block mb-1 font-medium text-gray-700">
+                  Presentation Date *
+                </label>
+                <input
+                  type="datetime-local"
+                  name="presentationDate"
+                  value={batchFormData.presentationDate}
+                  onChange={handleBatchChange}
+                  className="border p-2 rounded w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium text-gray-700">
+                  Total Fees *
+                </label>
+                <input
+                  type="number"
+                  name="courseFees"
+                  value={batchFormData.courseFees}
+                  onChange={handleBatchChange}
+                  className="border p-2 rounded w-full"
+                  min="0"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium text-gray-700">
+                  Fees From *
+                </label>
+                <input
+                  type="date"
+                  name="courseFeesFrom"
+                  value={batchFormData.courseFeesFrom}
+                  onChange={handleBatchChange}
+                  className="border p-2 rounded w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium text-gray-700">
+                  Fees To *
+                </label>
+                <input
+                  type="date"
+                  name="courseFeesTo"
+                  value={batchFormData.courseFeesTo}
+                  onChange={handleBatchChange}
+                  className="border p-2 rounded w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium text-gray-700">
+                  Batch Logo
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBatchLogoChange}
+                  className="border p-2 rounded w-full"
+                />
+                {batchFormData.batchLogo && (
+                  <img
+                    src={batchFormData.batchLogo}
+                    alt="Batch Logo"
+                    className="mt-2 w-24 h-24 object-contain border rounded"
+                  />
+                )}
+              </div>
             </div>
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">
-                Fees To
-              </label>
+            <div className="flex items-center space-x-2">
               <input
-                type="date"
-                name="courseFeesTo"
-                value={batchFormData.courseFeesTo}
+                type="checkbox"
+                name="batchIsActive"
+                checked={batchFormData.batchIsActive}
                 onChange={handleBatchChange}
-                className="border p-2 rounded w-full"
-                required
+                className="accent-black"
               />
+              <label className="text-gray-700 font-medium">Is Active</label>
             </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="batchIsActive"
-              checked={batchFormData.batchIsActive}
-              onChange={handleBatchChange}
-              className="accent-black"
-            />
-            <label className="text-gray-700 font-medium">Is Active</label>
-          </div>
-          <button
-            type="submit"
-            className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800"
-          >
-            {batchFormData.batchId ? "Update" : "Submit"}
-          </button>
-        </form>
+            <div className="flex gap-4">
+              <button
+                type="submit"
+                className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800"
+              >
+                {batchFormData.batchId ? "Update" : "Submit"}
+              </button>
+              <button
+                type="button"
+                onClick={closeForm}
+                className="bg-gray-500 text-white px-6 py-2 rounded hover:opacity-90"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
       )}
     </div>
   );
