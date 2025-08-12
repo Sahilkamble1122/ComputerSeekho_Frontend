@@ -35,15 +35,15 @@ export default function CoursePage() {
   const [batchLogoFile, setBatchLogoFile] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [batchSearchTerm, setBatchSearchTerm] = useState("");
-  
+
   // Pagination state for courses
   const [currentCoursePage, setCurrentCoursePage] = useState(1);
   const [coursesPerPage] = useState(10);
-  
+
   // Pagination state for batches
   const [currentBatchPage, setCurrentBatchPage] = useState(1);
   const [batchesPerPage] = useState(10);
-  
+
   const API_BASE = "http://localhost:8080/api";
 
   useEffect(() => {
@@ -180,7 +180,7 @@ export default function CoursePage() {
 
   const handleBatchSubmit = async (e) => {
     e.preventDefault();
-    
+
     let logoPath = batchFormData.batchLogo || "";
 
     // Upload logo if new file is selected
@@ -226,7 +226,11 @@ export default function CoursePage() {
       });
 
       if (res.ok) {
-        alert(`✅ Batch ${batchFormData.batchId ? "updated" : "created"} successfully!`);
+        alert(
+          `✅ Batch ${
+            batchFormData.batchId ? "updated" : "created"
+          } successfully!`
+        );
         setBatchFormData({
           batchId: null,
           batchName: "",
@@ -254,12 +258,17 @@ export default function CoursePage() {
   const handleEdit = (course) => {
     setFormVisible(true);
     setFormData({
-      ...course,
-      courseDuration: course.courseDuration.toString(),
+      courseId: course.courseId || "",
+      courseName: course.courseName || "",
+      courseDescription: course.courseDescription || "",
+      courseDuration: course.courseDuration?.toString() || "",
+      courseSyllabus: course.courseSyllabus || "",
+      ageGrpType: course.ageGrpType || "",
+      courseIsActive: course.courseIsActive ?? true,
+      coverPhoto: course.coverPhoto || "",
       videoId: course.videoId?.toString() || "",
     });
   };
-
   const handleDelete = async (courseId) => {
     if (!window.confirm("Are you sure you want to delete this course?")) return;
     try {
@@ -318,19 +327,27 @@ export default function CoursePage() {
   );
 
   const filteredBatches = batches.filter((batch) =>
-    (batch.batchName || "").toLowerCase().includes(batchSearchTerm.toLowerCase())
+    (batch.batchName || "")
+      .toLowerCase()
+      .includes(batchSearchTerm.toLowerCase())
   );
 
   // Pagination logic for courses
   const indexOfLastCourse = currentCoursePage * coursesPerPage;
   const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
-  const currentCourses = filteredCourses.slice(indexOfFirstCourse, indexOfLastCourse);
+  const currentCourses = filteredCourses.slice(
+    indexOfFirstCourse,
+    indexOfLastCourse
+  );
   const totalCoursePages = Math.ceil(filteredCourses.length / coursesPerPage);
 
   // Pagination logic for batches
   const indexOfLastBatch = currentBatchPage * batchesPerPage;
   const indexOfFirstBatch = indexOfLastBatch - batchesPerPage;
-  const currentBatches = filteredBatches.slice(indexOfFirstBatch, indexOfLastBatch);
+  const currentBatches = filteredBatches.slice(
+    indexOfFirstBatch,
+    indexOfLastBatch
+  );
   const totalBatchPages = Math.ceil(filteredBatches.length / batchesPerPage);
 
   // Pagination handlers for courses
@@ -460,19 +477,24 @@ export default function CoursePage() {
                   ))}
                 </tbody>
               </table>
-              
+
               {/* Courses Pagination */}
               {totalCoursePages > 1 && (
                 <div className="flex justify-center items-center space-x-2 mt-4">
                   <button
-                    onClick={() => handleCoursePageChange(currentCoursePage - 1)}
+                    onClick={() =>
+                      handleCoursePageChange(currentCoursePage - 1)
+                    }
                     disabled={currentCoursePage === 1}
                     className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
-                  
-                  {Array.from({ length: totalCoursePages }, (_, index) => index + 1).map((page) => (
+
+                  {Array.from(
+                    { length: totalCoursePages },
+                    (_, index) => index + 1
+                  ).map((page) => (
                     <button
                       key={page}
                       onClick={() => handleCoursePageChange(page)}
@@ -485,9 +507,11 @@ export default function CoursePage() {
                       {page}
                     </button>
                   ))}
-                  
+
                   <button
-                    onClick={() => handleCoursePageChange(currentCoursePage + 1)}
+                    onClick={() =>
+                      handleCoursePageChange(currentCoursePage + 1)
+                    }
                     disabled={currentCoursePage === totalCoursePages}
                     className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -495,9 +519,11 @@ export default function CoursePage() {
                   </button>
                 </div>
               )}
-              
+
               <div className="text-sm text-gray-500 text-center mt-2">
-                Showing {indexOfFirstCourse + 1} to {Math.min(indexOfLastCourse, filteredCourses.length)} of {filteredCourses.length} courses
+                Showing {indexOfFirstCourse + 1} to{" "}
+                {Math.min(indexOfLastCourse, filteredCourses.length)} of{" "}
+                {filteredCourses.length} courses
               </div>
             </div>
           )}
@@ -608,7 +634,7 @@ export default function CoursePage() {
                   ))}
                 </tbody>
               </table>
-              
+
               {/* Batches Pagination */}
               {totalBatchPages > 1 && (
                 <div className="flex justify-center items-center space-x-2 mt-4">
@@ -619,8 +645,11 @@ export default function CoursePage() {
                   >
                     Previous
                   </button>
-                  
-                  {Array.from({ length: totalBatchPages }, (_, index) => index + 1).map((page) => (
+
+                  {Array.from(
+                    { length: totalBatchPages },
+                    (_, index) => index + 1
+                  ).map((page) => (
                     <button
                       key={page}
                       onClick={() => handleBatchPageChange(page)}
@@ -633,7 +662,7 @@ export default function CoursePage() {
                       {page}
                     </button>
                   ))}
-                  
+
                   <button
                     onClick={() => handleBatchPageChange(currentBatchPage + 1)}
                     disabled={currentBatchPage === totalBatchPages}
@@ -643,9 +672,11 @@ export default function CoursePage() {
                   </button>
                 </div>
               )}
-              
+
               <div className="text-sm text-gray-500 text-center mt-2">
-                Showing {indexOfFirstBatch + 1} to {Math.min(indexOfLastBatch, filteredBatches.length)} of {filteredBatches.length} batches
+                Showing {indexOfFirstBatch + 1} to{" "}
+                {Math.min(indexOfLastBatch, filteredBatches.length)} of{" "}
+                {filteredBatches.length} batches
               </div>
             </div>
           )}
