@@ -82,6 +82,15 @@ const NewPaymentPage = () => {
         } else if (typesData.success && typesData.data) {
           types = typesData.data;
         }
+        
+        // Temporary debugging to see the actual data structure
+        console.log('Payment Types Raw Response:', typesData);
+        console.log('Payment Types Processed:', types);
+        if (types.length > 0) {
+          console.log('First Payment Type Object:', types[0]);
+          console.log('Available Keys:', Object.keys(types[0]));
+        }
+        
         setPaymentTypes(types);
         
       } catch (error) {
@@ -326,11 +335,17 @@ const NewPaymentPage = () => {
                     <SelectValue placeholder="Select payment type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {paymentTypes.map((type) => (
-                      <SelectItem key={type.paymentTypeId} value={type.paymentTypeId.toString()}>
-                        {type.paymentTypeDesc || `Payment Type ${type.paymentTypeId}`}
-                      </SelectItem>
-                    ))}
+                    {paymentTypes.map((type) => {
+                      // Handle different possible field names from API
+                      const id = type.paymentTypeId || type.id || type.paymentType_id;
+                      const description = type.paymentTypeDesc || type.description || type.paymentType_desc || `Payment Type ${id}`;
+                      
+                      return (
+                        <SelectItem key={id} value={id.toString()}>
+                          {description}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
