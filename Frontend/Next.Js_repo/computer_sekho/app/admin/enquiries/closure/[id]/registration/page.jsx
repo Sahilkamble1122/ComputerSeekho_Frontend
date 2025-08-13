@@ -39,8 +39,8 @@ export default function EnquiryForm() {
   const [errors, setErrors] = useState({});
   const [preview, setPreview] = useState(null);
   const [courses, setCourses] = useState([]);
-  const [allBatches, setAllBatches] = useState([]); // Store all batches
-  const [filteredBatches, setFilteredBatches] = useState([]); // Store filtered batches
+  const [allBatches, setAllBatches] = useState([]);
+  const [filteredBatches, setFilteredBatches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [courseError, setCourseError] = useState("");
   const [batchError, setBatchError] = useState("");
@@ -51,17 +51,26 @@ export default function EnquiryForm() {
 
   // Helper function to validate image files
   const validateImageFile = (file) => {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
     const maxSize = 5 * 1024 * 1024; // 5MB
-    
+
     if (!allowedTypes.includes(file.type)) {
-      return { valid: false, error: '❌ Please select a valid image file (JPEG, PNG, GIF, or WebP)' };
+      return {
+        valid: false,
+        error: "❌ Please select a valid image file (JPEG, PNG, GIF, or WebP)",
+      };
     }
-    
+
     if (file.size > maxSize) {
-      return { valid: false, error: '❌ Image size should be less than 5MB' };
+      return { valid: false, error: "❌ Image size should be less than 5MB" };
     }
-    
+
     return { valid: true };
   };
 
@@ -77,19 +86,33 @@ export default function EnquiryForm() {
   // Filter batches when course changes
   useEffect(() => {
     if (form.course && allBatches.length > 0) {
-      const filtered = allBatches.filter(batch => 
-        batch.courseId && batch.courseId.toString() === form.course.toString()
+      const filtered = allBatches.filter(
+        (batch) =>
+          batch.courseId && batch.courseId.toString() === form.course.toString()
       );
       setFilteredBatches(filtered);
-      
+
       // Clear batch selection if current batch doesn't match new course
-      if (form.batchId && !filtered.find(b => b.batchId.toString() === form.batchId.toString())) {
-        setForm(prev => ({ ...prev, batchId: "", courseFees: "", pendingFees: "" }));
+      if (
+        form.batchId &&
+        !filtered.find((b) => b.batchId.toString() === form.batchId.toString())
+      ) {
+        setForm((prev) => ({
+          ...prev,
+          batchId: "",
+          courseFees: "",
+          pendingFees: "",
+        }));
         setSelectedBatch(null);
       }
     } else {
       setFilteredBatches([]);
-      setForm(prev => ({ ...prev, batchId: "", courseFees: "", pendingFees: "" }));
+      setForm((prev) => ({
+        ...prev,
+        batchId: "",
+        courseFees: "",
+        pendingFees: "",
+      }));
       setSelectedBatch(null);
     }
   }, [form.course, allBatches]);
@@ -104,15 +127,11 @@ export default function EnquiryForm() {
       const data = await res.json();
       setForm((prev) => ({
         ...prev,
-        // Prefer studentName, fallback to enquirerName
         name: data.studentName || data.enquirerName || "",
-        // These may not exist on enquiry; leave blank if missing
         dob: data.dob || "",
         gender: data.gender || "",
-        // Address keys may differ; keep empty if not present
         resAddress: data.enquirerAddress || "",
         officeAddress: data.officeAddress || "",
-        // Phones from enquiry if present
         phoneR: data.phoneR || "",
         phoneO: data.phoneO || "",
         mobile: (data.enquirerMobile && String(data.enquirerMobile)) || "",
@@ -171,7 +190,7 @@ export default function EnquiryForm() {
       const data = await res.json();
       if (Array.isArray(data)) {
         setAllBatches(data);
-        setFilteredBatches([]); // Initially empty until course is selected
+        setFilteredBatches([]);
       } else {
         setBatchError("Invalid data format received");
       }
@@ -207,15 +226,21 @@ export default function EnquiryForm() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    
+
     if (name === "course") {
-      // Clear batch selection when course changes
-      setForm(prev => ({ ...prev, batchId: "", courseFees: "", pendingFees: "" }));
+      setForm((prev) => ({
+        ...prev,
+        batchId: "",
+        courseFees: "",
+        pendingFees: "",
+      }));
       setSelectedBatch(null);
     }
-    
+
     if (name === "batchId") {
-      const selected = filteredBatches.find((b) => b.batchId.toString() === value);
+      const selected = filteredBatches.find(
+        (b) => b.batchId.toString() === value
+      );
       if (selected) {
         setForm((prev) => ({
           ...prev,
@@ -225,7 +250,7 @@ export default function EnquiryForm() {
         setSelectedBatch(selected);
       }
     }
-    
+
     if (name === "initialPayment") {
       const paymentAmount = parseFloat(value) || 0;
       const courseFee = parseFloat(form.courseFees) || 0;
@@ -260,7 +285,6 @@ export default function EnquiryForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Client-side validation only; disable native validation on form
     if (!validateForm()) {
       alert("❌ Please correct the errors before submitting.");
       return;
@@ -274,165 +298,83 @@ export default function EnquiryForm() {
         return;
       }
 
-      // Prepare JSON payload
-      // Compute fees locally to avoid mutating React state directly
+      // Calculate fees
       const computedCourseFees = selectedBatch?.courseFees || parseFloat(form.courseFees) || 0;
-      const computedPendingFees = (() => {
-        const initPay = parseFloat(form.initialPayment) || 0;
-        return Math.max(0, computedCourseFees - initPay);
-      })();
+      const computedPendingFees = Math.max(0, computedCourseFees - (parseFloat(form.initialPayment) || 0));
 
-      // Try different approaches to send the photo
-      let success = false;
       let studentResult = null;
       let studentId = null;
+      let photoPath = null;
 
-      // Use the correct endpoint that handles photo uploads
-      try {
-        console.log('Using /api/students/form endpoint for photo upload...');
-        
-        const formData = new FormData();
-        formData.append('studentName', form.name);
-        formData.append('studentAddress', form.resAddress);
-        formData.append('studentGender', form.gender);
-        formData.append('studentDob', form.dob);
-        formData.append('studentQualification', form.qualification);
-        formData.append('studentMobile', form.mobile);
-        formData.append('studentEmail', form.email);
-        formData.append('courseId', form.course);
-        formData.append('studentPassword', 'pass123');
-        formData.append('studentUsername', form.email);
-        formData.append('batchId', form.batchId);
-        
-        // Add fees information - these might be needed by the backend
-        if (computedCourseFees > 0) {
-          formData.append('courseFee', computedCourseFees.toString());
-        }
-        if (computedPendingFees > 0) {
-          formData.append('pendingFees', computedPendingFees.toString());
-        }
-        
-        // Add photo if available
-        if (form.photo instanceof File) {
-          formData.append('photo', form.photo);
-          console.log('✅ Photo added to FormData:', form.photo.name);
-        } else {
-          console.log('ℹ️ No photo to upload');
-        }
-        
-        console.log('Sending FormData with fields:', Array.from(formData.keys()));
-        console.log('Form data values:', {
-          studentName: form.name,
-          studentAddress: form.resAddress,
-          studentGender: form.gender,
-          studentDob: form.dob,
-          studentQualification: form.qualification,
-          studentMobile: form.mobile,
-          studentEmail: form.email,
-          courseId: form.course,
-          batchId: form.batchId,
-          photo: form.photo ? form.photo.name : 'None'
-        });
-        
-        const response = await fetch("http://localhost:8080/api/students/form", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            // Don't set Content-Type for FormData, let browser set it
-          },
-          body: formData,
-        });
+      // First, upload photo if available
+      if (form.photo instanceof File) {
+        try {
+          const photoFormData = new FormData();
+          photoFormData.append("photo", form.photo);
 
-        if (response.ok) {
-          studentResult = await response.json();
-          studentId = studentResult.id || studentResult.studentId;
-          console.log('✅ Success with /api/students/form endpoint:', studentResult);
-          console.log('✅ Photo URL in response:', studentResult.photoUrl);
-          success = true;
-        } else {
-          const errorText = await response.text();
-          console.error('❌ Form endpoint failed:', response.status, errorText);
-          
-          // Try to parse the error response
-          try {
-            const errorJson = JSON.parse(errorText);
-            console.log('Parsed error response:', errorJson);
-          } catch (parseError) {
-            console.log('Could not parse error response as JSON:', errorText);
+          const photoResponse = await fetch("/api/upload-student-photo", {
+            method: "POST",
+            body: photoFormData,
+          });
+
+          if (photoResponse.ok) {
+            const photoData = await photoResponse.json();
+            photoPath = photoData.path; // This will be like "/students/1234567890_photo.jpg"
+            console.log("✅ Photo uploaded successfully:", photoPath);
+          } else {
+            throw new Error("Photo upload failed");
           }
-          
-          // Fallback: Try the regular JSON endpoint without photo
-          console.log('🔄 Trying fallback with /api/students endpoint...');
-          try {
-            const fallbackData = {
-              studentName: form.name,
-              studentAddress: form.resAddress,
-              studentGender: form.gender,
-              studentDob: form.dob,
-              studentQualification: form.qualification,
-              studentMobile: form.mobile,
-              studentEmail: form.email,
-              courseId: parseInt(form.course),
-              studentPassword: "pass123",
-              studentUsername: form.email,
-              batchId: parseInt(form.batchId),
-              courseFee: computedCourseFees,
-              pendingFees: computedPendingFees,
-            };
-            
-            console.log('Sending fallback data:', fallbackData);
-            
-            const fallbackResponse = await fetch("http://localhost:8080/api/students", {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(fallbackData),
-            });
-            
-            if (fallbackResponse.ok) {
-              studentResult = await fallbackResponse.json();
-              studentId = studentResult.id || studentResult.studentId;
-              console.log('✅ Success with fallback endpoint:', studentResult);
-              success = true;
-              alert("✅ Student registered successfully! (Photo could not be saved - backend configuration issue)");
-            } else {
-              const fallbackErrorText = await fallbackResponse.text();
-              console.error('❌ Fallback endpoint also failed:', fallbackResponse.status, fallbackErrorText);
-              throw new Error(`Both endpoints failed. Form: ${response.status}, Fallback: ${fallbackResponse.status}`);
-            }
-          } catch (fallbackError) {
-            console.error('Error in fallback attempt:', fallbackError);
-            throw new Error(`Registration failed: ${errorText}`);
-          }
+        } catch (photoError) {
+          console.warn("Photo upload failed:", photoError);
+          alert("⚠️ Photo upload failed, but continuing with registration...");
         }
-      } catch (error) {
-        console.error('Error in registration:', error);
-        throw error;
       }
 
-      if (!success) {
-        throw new Error("Registration failed. Please check backend configuration.");
+      // Now register the student with the photo path
+      const payload = {
+        studentName: form.name,
+        studentAddress: form.resAddress,
+        studentGender: form.gender,
+        studentDob: form.dob,
+        studentQualification: form.qualification,
+        studentMobile: form.mobile,
+        studentEmail: form.email,
+        studentUsername: form.email,
+        studentPassword: "pass123",
+        courseId: parseInt(form.course),
+        batchId: parseInt(form.batchId),
+        courseFee: computedCourseFees,
+        pendingFees: computedPendingFees,
+        photoUrl: photoPath, // Send the photo path to backend
+      };
+
+      const response = await fetch("http://localhost:8080/api/students", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Registration failed: ${JSON.stringify(errorData)}`);
       }
 
-      console.log('✅ Student registration successful!');
-      console.log('✅ Student ID:', studentId);
-      console.log('✅ Used endpoint:', studentResult.photoUrl ? '/api/students/form' : '/api/students (fallback)');
+      studentResult = await response.json();
+      studentId = studentResult.id || studentResult.studentId;
       
-      // Show success message to user
-      if (studentResult.photoUrl) {
-        alert(`✅ Student registered successfully!\n📸 Photo saved: ${studentResult.photoUrl}`);
+      if (photoPath) {
+        console.log("✅ Student registered with photo:", studentResult);
+        alert("✅ Student registered successfully with photo!");
       } else {
-        alert("✅ Student registered successfully!\n⚠️ Photo could not be saved - using fallback endpoint");
+        console.log("✅ Student registered without photo:", studentResult);
+        alert("✅ Student registered successfully!");
       }
 
       // Process initial payment if provided
-      if (
-        form.initialPayment &&
-        parseFloat(form.initialPayment) > 0 &&
-        form.paymentTypeId
-      ) {
+      if (form.initialPayment && parseFloat(form.initialPayment) > 0 && form.paymentTypeId) {
         try {
           const paymentResponse = await fetch("/api/payments/process", {
             method: "POST",
@@ -443,8 +385,7 @@ export default function EnquiryForm() {
             body: JSON.stringify({
               studentId: studentId,
               paymentTypeId: parseInt(form.paymentTypeId),
-              paymentDate:
-                form.paymentDate || new Date().toISOString().split("T")[0],
+              paymentDate: form.paymentDate || new Date().toISOString().split("T")[0],
               courseId: parseInt(form.course),
               batchId: parseInt(form.batchId),
               amount: parseFloat(form.initialPayment),
@@ -452,70 +393,66 @@ export default function EnquiryForm() {
             }),
           });
 
-          const paymentResult = await paymentResponse.json();
-          if (paymentResult.success) {
-            alert("✅ Student registered successfully with initial payment!");
+          if (paymentResponse.ok) {
+            const paymentResult = await paymentResponse.json();
+            if (paymentResult.success) {
+              alert("✅ Student registered successfully with initial payment!");
+            } else {
+              alert(`✅ Student registered successfully! (Payment processing failed: ${paymentResult.error})`);
+            }
           } else {
-            alert(
-              "✅ Student registered successfully! (Payment processing failed: " +
-                paymentResult.error +
-                ")"
-            );
+            alert("✅ Student registered successfully! (Payment processing failed)");
           }
         } catch (paymentError) {
-          alert(
-            "✅ Student registered successfully! (Payment processing failed: " +
-              paymentError.message +
-              ")"
-          );
+          console.error("Payment processing error:", paymentError);
+          alert("✅ Student registered successfully! (Payment processing failed)");
         }
-      } else {
-        alert("✅ Student registered successfully!");
       }
 
-      // After successful student registration, mark the enquiry as processed/success
+      // Update enquiry status
       try {
-        const token2 = getToken();
-        // 1) Send closure reason (only closure fields allowed by backend)
+        // Mark enquiry as processed
         await fetch(`http://localhost:8080/api/enquiries/${enquiryId}/closure`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token2}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             closureReasonId: null,
             closureReason: "Success",
           }),
         });
-        // 2) Update the enquiry status to 'success' using the new status endpoint
+
+        // Update status to success
         await fetch(`http://localhost:8080/api/enquiries/${enquiryId}/status?status=success`, {
           method: "PATCH",
           headers: {
-            Authorization: `Bearer ${token2}`,
+            Authorization: `Bearer ${token}`,
           },
         });
-        
-        // 3) Update enquiryProcessedFlag to true
+
+        // Mark as processed
         await fetch(`http://localhost:8080/api/enquiries/${enquiryId}/processed?enquiryProcessedFlag=true`, {
           method: "PATCH",
           headers: {
-            Authorization: `Bearer ${token2}`,
+            Authorization: `Bearer ${token}`,
           },
         });
       } catch (error) {
-        console.error('Error updating enquiry status:', error);
-        // ignore failure to not block user
+        console.error("Error updating enquiry status:", error);
+        // Don't block user if this fails
       }
 
+      // Reset form and redirect
       setForm(initialFormState);
       setPreview(null);
-      // Redirect to initial payment page for this student
+      
       if (studentId) {
         router.push(`/admin/payments/${studentId}/new-payment`);
       }
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error("Registration error:", error);
       alert("❌ Registration failed: " + error.message);
     } finally {
       setLoading(false);
@@ -747,12 +684,11 @@ export default function EnquiryForm() {
             disabled={!form.course || filteredBatches.length === 0}
           >
             <option value="">
-              {!form.course 
-                ? "Please select a course first" 
-                : filteredBatches.length === 0 
-                  ? "No batches available for this course" 
-                  : "Select Batch"
-              }
+              {!form.course
+                ? "Please select a course first"
+                : filteredBatches.length === 0
+                ? "No batches available for this course"
+                : "Select Batch"}
             </option>
             {filteredBatches.map((batch) => (
               <option key={batch.batchId} value={batch.batchId}>
@@ -760,13 +696,13 @@ export default function EnquiryForm() {
               </option>
             ))}
           </select>
-          
+
           {form.course && filteredBatches.length === 0 && (
             <p className="text-sm text-orange-600 mt-1">
               No batches available for the selected course
             </p>
           )}
-          
+
           {form.courseFees && (
             <p className="text-sm text-green-600 mt-1">
               Total Fees: ₹{form.courseFees}
