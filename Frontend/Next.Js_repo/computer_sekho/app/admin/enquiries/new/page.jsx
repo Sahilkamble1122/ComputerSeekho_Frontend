@@ -73,6 +73,7 @@ export default function EnquiryForm() {
           setCourses(coursesData);
         } else {
           console.error("Failed to fetch courses:", coursesResponse.status);
+          toast.error("Failed to load courses");
         }
 
         // Fetch staff
@@ -84,6 +85,7 @@ export default function EnquiryForm() {
           setStaffList(staffData);
         } else {
           console.error("Failed to fetch staff:", staffResponse.status);
+          toast.error("Failed to load staff");
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -97,6 +99,7 @@ export default function EnquiryForm() {
   // Get current admin from localStorage and find staff ID
   useEffect(() => {
     const adminName = sessionStorage.getItem("admin") || "";
+    const token = sessionStorage.getItem("token");
     setCurrentAdmin(adminName);
     
     // Find staff ID by name
@@ -164,8 +167,7 @@ export default function EnquiryForm() {
         enquiryCounter: 0,
       };
 
-      console.log("Submitting payload:", payload);
-      console.log("Payload JSON:", JSON.stringify(payload, null, 2));
+
 
       const res = await fetch("http://localhost:8080/api/enquiries", {
         method: "POST",
@@ -176,16 +178,12 @@ export default function EnquiryForm() {
         body: JSON.stringify(payload),
       });
 
-      console.log("Response status:", res.status);
-      console.log("Response headers:", Object.fromEntries(res.headers.entries()));
-
       if (res.ok) {
         let responseData;
         try {
           responseData = await res.json();
-          console.log("Success response:", responseData);
         } catch (jsonError) {
-          console.log("Response was successful but not JSON:", await res.text());
+          // Response was successful but not JSON
         }
         toast.success("Enquiry saved successfully.");
         reset();
@@ -202,7 +200,19 @@ export default function EnquiryForm() {
         setTimeout(() => {
           router.push("/admin");
         }, 1500);
-      } 
+      } else {
+        // Handle error response
+        let errorData;
+        try {
+          errorData = await res.json();
+          console.error("Error response:", errorData);
+          toast.error(errorData.message || `Failed to save enquiry. Status: ${res.status}`);
+        } catch (jsonError) {
+          const errorText = await res.text();
+          console.error("Error response (not JSON):", errorText);
+          toast.error(`Failed to save enquiry. Status: ${res.status}`);
+        }
+      }
     } catch (error) {
       console.error("Network error:", error);
       toast.error("Network error. Please check your connection and try again.");
@@ -411,7 +421,10 @@ export default function EnquiryForm() {
 
               {/* Submit Button */}
               <div className="flex justify-end pt-6">
-                <Button type="submit" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  disabled={loading}
+                >
                   {loading ? "Saving..." : "Save Enquiry"}
                 </Button>
               </div>
