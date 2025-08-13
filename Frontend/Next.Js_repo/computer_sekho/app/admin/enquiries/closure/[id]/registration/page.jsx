@@ -459,6 +459,155 @@ export default function EnquiryForm() {
     }
   };
 
+  const handlePrintForm = () => {
+    const printContent = document.getElementById("print-content").innerHTML;
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Student Enrollment Form</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .header h1 { color: #2c2b5e; margin-bottom: 10px; }
+            .section { margin-bottom: 25px; }
+            .section h3 { border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+            .field { margin-bottom: 10px; }
+            .field strong { display: inline-block; width: 180px; }
+            .signatures { text-align: center; margin-top: 40px; }
+            .signature-box { display: inline-block; border: 2px solid #d1d5db; padding: 15px; border-radius: 8px; margin: 0 20px; }
+            .signature-line { width: 120px; height: 60px; border-bottom: 2px solid #9ca3af; margin-top: 10px; }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          ${printContent}
+          <div class="no-print" style="text-align: center; margin-top: 30px;">
+            <button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer;">Print Form</button>
+            <button onclick="window.close()" style="padding: 10px 20px; background: #6b7280; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">Close</button>
+          </div>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+  };
+
+  const handleDownloadForm = () => {
+    const printContent = document.getElementById("print-content").innerHTML;
+    const fullHTML = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Student Enrollment Form - ${form.name || 'Student'}</title>
+          <meta charset="utf-8">
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 20px; 
+              background: white;
+            }
+            .header { 
+              text-align: center; 
+              margin-bottom: 30px; 
+              border-bottom: 3px solid #2c2b5e;
+              padding-bottom: 20px;
+            }
+            .header h1 { 
+              color: #2c2b5e; 
+              margin-bottom: 10px; 
+              font-size: 28px;
+            }
+            .section { 
+              margin-bottom: 25px; 
+              padding: 15px;
+              border: 1px solid #e5e7eb;
+              border-radius: 8px;
+            }
+            .section h3 { 
+              border-bottom: 2px solid #e5e7eb; 
+              padding-bottom: 8px; 
+              margin-bottom: 15px;
+              color: #374151;
+            }
+            .grid { 
+              display: grid; 
+              grid-template-columns: 1fr 1fr; 
+              gap: 20px; 
+            }
+            .field { 
+              margin-bottom: 12px; 
+              padding: 8px;
+              background: #f9fafb;
+              border-radius: 4px;
+            }
+            .field strong { 
+              display: inline-block; 
+              width: 180px; 
+              color: #374151;
+            }
+            .signatures { 
+              text-align: center; 
+              margin-top: 40px; 
+            }
+            .signature-box { 
+              display: inline-block; 
+              border: 2px solid #d1d5db; 
+              padding: 15px; 
+              border-radius: 8px; 
+              margin: 0 20px; 
+              background: #f9fafb;
+            }
+            .signature-line { 
+              width: 120px; 
+              height: 60px; 
+              border-bottom: 2px solid #9ca3af; 
+              margin-top: 10px; 
+            }
+            .footer {
+              margin-top: 40px;
+              text-align: center;
+              color: #6b7280;
+              font-size: 12px;
+              border-top: 1px solid #e5e7eb;
+              padding-top: 20px;
+            }
+            @media print {
+              body { margin: 0; }
+              .section { border: none; }
+              .field { background: white; }
+            }
+          </style>
+        </head>
+        <body>
+          ${printContent}
+          <div class="footer">
+            <p>Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+            <p>Computer Seekho - Student Enrollment Form</p>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    // Create a blob and download link
+    const blob = new Blob([fullHTML], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Student_Enrollment_Form_${form.name || 'Student'}_${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="max-w-4xl mx-auto mt-10 p-6 bg-white shadow-md rounded-xl">
       <div className="flex items-center justify-between mb-4">
@@ -786,7 +935,108 @@ export default function EnquiryForm() {
         >
           {loading ? "Loading..." : "Submit"}
         </button>
+
+        <button
+          type="button"
+          onClick={handlePrintForm}
+          className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 ml-4"
+          disabled={loading}
+        >
+          Print Form
+        </button>
+
+        <button
+          type="button"
+          onClick={handleDownloadForm}
+          className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 ml-4"
+          disabled={loading}
+        >
+          Download Form
+        </button>
       </form>
+
+      {/* Hidden print content */}
+      <div id="print-content" className="hidden">
+        <div className="p-8 max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-[#2c2b5e] mb-4">Student Enrollment Form</h1>
+            <p className="text-gray-600">Generated on: {new Date().toLocaleDateString()}</p>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-8">
+            <div className="col-span-2">
+              <h3 className="text-lg font-semibold mb-4 border-b pb-2">Personal Information</h3>
+              <div className="space-y-3">
+                <div><strong>Name:</strong> {form.name || 'N/A'}</div>
+                <div><strong>Date of Birth:</strong> {form.dob || 'N/A'}</div>
+                <div><strong>Gender:</strong> {form.gender || 'N/A'}</div>
+                <div><strong>Residential Address:</strong> {form.resAddress || 'N/A'}</div>
+                <div><strong>Office Address:</strong> {form.officeAddress || 'N/A'}</div>
+              </div>
+            </div>
+            
+            <div className="col-span-1">
+              <h3 className="text-lg font-semibold mb-4 border-b pb-2">Student Photo</h3>
+              <div className="flex justify-center">
+                {preview ? (
+                  <img
+                    src={preview}
+                    alt="Student Photo"
+                    className="w-20 h-20 object-cover border-2 border-gray-300 rounded-lg shadow-sm"
+                    style={{ objectPosition: 'center top' }}
+                  />
+                ) : (
+                  <div className="w-20 h-20 border-2 border-gray-300 rounded-lg bg-gray-100 flex items-center justify-center shadow-sm">
+                    <span className="text-gray-400 text-xs text-center">No Photo</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 text-center mt-2">Student Photo</p>
+            </div>
+          </div>
+          
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-4 border-b pb-2">Contact Information</h3>
+            <div className="grid grid-cols-2 gap-8">
+              <div>
+                <div><strong>Phone:</strong> {form.phoneR || 'N/A'}</div>
+                <div><strong>Secondary Phone:</strong> {form.phoneO || 'N/A'}</div>
+              </div>
+              <div>
+                <div><strong>Mobile:</strong> {form.mobile || 'N/A'}</div>
+                <div><strong>Email:</strong> {form.email || 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-4 border-b pb-2">Academic Information</h3>
+            <div className="grid grid-cols-2 gap-8">
+              <div>
+                <div><strong>Educational Qualification:</strong> {form.qualification || 'N/A'}</div>
+                <div><strong>Course:</strong> {courses.find(c => c.courseId == form.course)?.courseName || 'N/A'}</div>
+                <div><strong>Batch:</strong> {filteredBatches.find(b => b.batchId == form.batchId)?.batchName || 'N/A'}</div>
+              </div>
+              <div>
+                <div><strong>Course Fees:</strong> ₹{form.courseFees || 'N/A'}</div>
+                <div><strong>Initial Payment:</strong> ₹{form.initialPayment || '0'}</div>
+                <div><strong>Pending Fees:</strong> ₹{form.pendingFees || 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-8 text-center">
+            <div className="inline-block border-2 border-gray-300 p-4 rounded">
+              <p className="text-sm text-gray-600">Student Signature</p>
+              <div className="w-32 h-16 border-b-2 border-gray-400 mt-2"></div>
+            </div>
+            <div className="inline-block border-2 border-gray-300 p-4 rounded ml-8">
+              <p className="text-sm text-gray-600">Authorized Signature</p>
+              <div className="w-32 h-16 border-b-2 border-gray-400 mt-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
