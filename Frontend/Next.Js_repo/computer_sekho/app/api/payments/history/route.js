@@ -21,7 +21,7 @@ export async function GET(request) {
       );
     }
 
-    // Fetch all receipts and filter by studentId on the frontend
+    // Fetch all receipts and filter by studentId
     const receiptsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/receipts`, {
       headers: {
         'Authorization': authHeader,
@@ -29,21 +29,16 @@ export async function GET(request) {
       }
     });
 
-    if (!receiptsResponse.ok) {
-      return NextResponse.json(
-        { error: 'Failed to fetch payment history' },
-        { status: 400 }
-      );
+    let receipts = [];
+    if (receiptsResponse.ok) {
+      const allReceipts = await receiptsResponse.json();
+      // Filter receipts by studentId
+      receipts = Array.isArray(allReceipts) 
+        ? allReceipts.filter(receipt => String(receipt.studentId) === String(studentId))
+        : (allReceipts.data || []).filter(receipt => String(receipt.studentId) === String(studentId));
     }
 
-    const allReceipts = await receiptsResponse.json();
-    
-    // Filter receipts by studentId on the frontend
-    const receipts = Array.isArray(allReceipts) 
-      ? allReceipts.filter(receipt => String(receipt.studentId) === String(studentId))
-      : (allReceipts.data || []).filter(receipt => String(receipt.studentId) === String(studentId));
-
-    // Fetch payments for additional details (also filter by studentId)
+    // Fetch all payments and filter by studentId
     const paymentsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/payments`, {
       headers: {
         'Authorization': authHeader,
@@ -51,23 +46,52 @@ export async function GET(request) {
       }
     });
 
-    let allPayments = [];
+    let payments = [];
     if (paymentsResponse.ok) {
-      allPayments = await paymentsResponse.json();
+      const allPayments = await paymentsResponse.json();
+      // Filter payments by studentId
+      payments = Array.isArray(allPayments)
+        ? allPayments.filter(payment => String(payment.studentId) === String(studentId))
+        : (allPayments.data || []).filter(payment => String(payment.studentId) === String(studentId));
     }
-    
-    // Filter payments by studentId on the frontend
-    const payments = Array.isArray(allPayments)
-      ? allPayments.filter(payment => String(payment.studentId) === String(studentId))
-      : (allPayments.data || []).filter(payment => String(payment.studentId) === String(studentId));
 
-    // Combine receipt and payment data
-    const paymentHistory = receipts.map(receipt => {
+    // Create comprehensive payment history
+    let paymentHistory = [];
+
+    // First, add all receipts with their payment details
+    receipts.forEach(receipt => {
       const payment = payments.find(p => p.paymentId === receipt.paymentId);
-      return {
+      paymentHistory.push({
         ...receipt,
-        paymentDetails: payment || null
-      };
+        paymentDetails: payment || null,
+        isReceipt: true
+      });
+    });
+
+    // Then, add any payments that don't have receipts (like initial payments)
+    payments.forEach(payment => {
+      const hasReceipt = paymentHistory.some(item => item.paymentId === payment.paymentId);
+      if (!hasReceipt) {
+        paymentHistory.push({
+          receiptId: `payment_${payment.paymentId}`,
+          receiptNumber: `P${payment.paymentId}`,
+          receiptAmount: payment.amount,
+          receiptDate: payment.paymentDate,
+          createdDate: payment.paymentDate,
+          studentId: payment.studentId,
+          paymentId: payment.paymentId,
+          paymentDetails: payment,
+          isReceipt: false,
+          isInitialPayment: true // Mark as initial payment if no receipt exists
+        });
+      }
+    });
+
+    // Sort by date (oldest first to show initial payment first)
+    paymentHistory.sort((a, b) => {
+      const dateA = new Date(a.receiptDate || a.createdDate || a.paymentDate || 0);
+      const dateB = new Date(b.receiptDate || b.createdDate || b.paymentDate || 0);
+      return dateA - dateB;
     });
 
     return NextResponse.json({

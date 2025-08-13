@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, History, ArrowLeft } from 'lucide-react';
+import { Plus, History, ArrowLeft, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { getApiUrl, API_CONFIG } from '@/lib/config';
 
@@ -93,6 +93,79 @@ const StudentPaymentDashboard = () => {
       style: 'currency',
       currency: 'INR'
     }).format(amount);
+  };
+
+  const generateReceipt = () => {
+    if (!student || paymentHistory.length === 0) {
+      toast.error('No payment data available to generate receipt');
+      return;
+    }
+
+    // Calculate totals
+    const totalPaid = paymentHistory.reduce((sum, receipt) => {
+      return sum + (receipt.receiptAmount || 0);
+    }, 0);
+    const remainingAmount = student.totalFees - totalPaid;
+
+    // Get initial payment amount (first payment during registration)
+    const initialPayment = paymentHistory.find(receipt => receipt.isInitialPayment) || paymentHistory[0];
+    const initialPaymentAmount = initialPayment ? (initialPayment.receiptAmount || 0) : 0;
+
+    // Create receipt content
+    const receiptContent = `
+COMPUTER SEEKHO - PAYMENT RECEIPT
+=====================================
+
+STUDENT INFORMATION:
+Name: ${student.name}
+Email: ${student.email}
+Phone: ${student.phone}
+Course: ${student.course}
+Batch: ${student.batch}
+Student ID: ${student.id}
+
+FEE SUMMARY:
+Total Course Fees: ${formatCurrency(student.totalFees)}
+Initial Payment (Registration): ${formatCurrency(initialPaymentAmount)}
+Subsequent Payments: ${formatCurrency(totalPaid - initialPaymentAmount)}
+Total Amount Paid: ${formatCurrency(totalPaid)}
+Remaining Amount: ${formatCurrency(remainingAmount)}
+
+PAYMENT HISTORY:
+${paymentHistory.map((receipt, index) => {
+  const isInitial = receipt.isInitialPayment || index === 0;
+  const paymentType = isInitial ? 'Initial Payment (Registration)' : 'Regular Payment';
+  const receiptNumber = receipt.isReceipt ? 
+    `Receipt #${receipt.receiptNumber || receipt.receiptId}` : 
+    `Payment #${receipt.receiptNumber || receipt.receiptId}`;
+  
+  return `
+${index + 1}. ${paymentType}
+    ${receiptNumber}
+    Date: ${receipt.receiptDate ? new Date(receipt.receiptDate).toLocaleDateString() : 
+           receipt.createdDate ? new Date(receipt.createdDate).toLocaleDateString() : 
+           receipt.paymentDate ? new Date(receipt.paymentDate).toLocaleDateString() : 'N/A'}
+    Amount: ${formatCurrency(receipt.receiptAmount || 0)}
+    Payment Type: ${receipt.paymentDetails?.paymentTypeDesc || 'N/A'}
+`;
+}).join('')}
+
+Generated on: ${new Date().toLocaleString()}
+=====================================
+    `.trim();
+
+    // Create and download the file
+    const blob = new Blob([receiptContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Payment_Receipt_${student.name}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    toast.success('Receipt downloaded successfully');
   };
 
   if (loading) {
@@ -194,28 +267,61 @@ const StudentPaymentDashboard = () => {
 
       {/* Payment History */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Payment History</CardTitle>
+          <Button 
+            onClick={generateReceipt}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Printer size={16} />
+            Print Receipt
+          </Button>
         </CardHeader>
         <CardContent>
           {paymentHistory.length === 0 ? (
             <p className="text-center text-gray-500 py-4">No payment history found.</p>
           ) : (
             <div className="space-y-2">
-              {paymentHistory.map((receipt) => (
-                <div key={receipt.receiptId} className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Receipt #{receipt.receiptNumber || receipt.receiptId}</p>
-                    <p className="text-sm text-gray-600">
-                      {receipt.receiptDate ? new Date(receipt.receiptDate).toLocaleDateString() : 
-                       receipt.createdDate ? new Date(receipt.createdDate).toLocaleDateString() : 'N/A'}
+              {paymentHistory.map((receipt, index) => {
+                const isInitial = receipt.isInitialPayment || index === 0;
+                const paymentType = receipt.paymentDetails?.paymentTypeDesc || 'N/A';
+                const receiptNumber = receipt.isReceipt ? 
+                  `Receipt #${receipt.receiptNumber || receipt.receiptId}` : 
+                  `Payment #${receipt.receiptNumber || receipt.receiptId}`;
+                
+                return (
+                  <div key={receipt.receiptId} className="flex justify-between items-center p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{receiptNumber}</p>
+                        {isInitial && (
+                          <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                            Initial Payment
+                          </span>
+                        )}
+                        {!receipt.isReceipt && (
+                          <span className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">
+                            Direct Payment
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {receipt.receiptDate ? new Date(receipt.receiptDate).toLocaleDateString() : 
+                         receipt.createdDate ? new Date(receipt.createdDate).toLocaleDateString() : 
+                         receipt.paymentDate ? new Date(receipt.paymentDate).toLocaleDateString() : 'N/A'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Payment Type: {paymentType}
+                      </p>
+                    </div>
+                    <p className="font-semibold text-green-600">
+                      {receipt.receiptAmount ? formatCurrency(receipt.receiptAmount) : 'N/A'}
                     </p>
                   </div>
-                  <p className="font-semibold text-green-600">
-                    {receipt.receiptAmount ? formatCurrency(receipt.receiptAmount) : 'N/A'}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
