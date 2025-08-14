@@ -17,14 +17,16 @@ export default function BatchPlacementCard({
   const placement =
     totalStudents > 0 ? Math.round((placedStudents / totalStudents) * 100) : 0;
 
-  // Extract year from presentation date
-  const getYear = (dateString) => {
+  // Format presentation date
+  const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.getFullYear();
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
-
-  const year = getYear(presentationDate);
 
   return (
     <div className="text-center shadow-md p-4 rounded-xl border hover:scale-105 transition-all">
@@ -39,15 +41,26 @@ export default function BatchPlacementCard({
         }}
       />
 
-      {/* Batch Name with Year in Button */}
-      <div className="mb-2">
-        <button
-          onClick={() => router.push(`/placement-details/${slug}`)}
-          className="bg-white border border-blue-600 text-blue-600 px-3 py-1 rounded-full font-semibold cursor-pointer hover:bg-blue-600 hover:text-white transition"
-        >
-          {batch} {year && `(${year})`}
-        </button>
-      </div>
+      <button
+        onClick={() => router.push(`/placement-details/${slug}`)}
+        className="bg-white border border-blue-600 text-blue-600 px-3 py-1 rounded-full font-semibold my-2 cursor-pointer hover:bg-blue-600 hover:text-white transition"
+      >
+        {batch}
+      </button>
+
+      {/* Course Fees */}
+      {courseFees && (
+        <p className="text-gray-600 text-sm mb-1">
+          ₹{courseFees.toLocaleString()}
+        </p>
+      )}
+
+      {/* Presentation Date */}
+      {presentationDate && (
+        <p className="text-gray-500 text-xs mb-2">
+          Starts: {formatDate(presentationDate)}
+        </p>
+      )}
 
       {/* ✅ Render dynamically calculated percentage or placeholder */}
       {totalStudents > 0 ? (

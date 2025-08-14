@@ -1,8 +1,28 @@
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge"
+import { API_CONFIG, getApiUrl } from "./config";
 
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Fetches all placement data from the backend
+ * @returns {Promise<Array>} - Array of placement data for all batches
+ */
+export async function fetchPlacementData() {
+  try {
+    const response = await fetch('/api/placements');
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch placement data: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching placement data:', error);
+    throw error;
+  }
 }
 
 /**

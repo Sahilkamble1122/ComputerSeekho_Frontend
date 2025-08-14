@@ -9,6 +9,8 @@ export const API_CONFIG = {
     PAYMENT_HISTORY: '/api/receipts',
     PAYMENT_TYPES: '/api/payment-types',
     PROCESS_PAYMENT: '/api/payment-with-type',
+    PLACEMENTS: '/api/placements',
+    BATCHES: '/api/batches',
   }
 };
 
