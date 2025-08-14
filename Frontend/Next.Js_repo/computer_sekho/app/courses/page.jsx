@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import Footer from "../footer/components/Footer";
 import Navcomponent from "../home/components/Navcomponent";
@@ -14,7 +13,10 @@ export default function CoursesPage() {
   useEffect(() => {
     fetch("http://localhost:8080/api/courses")
       .then((res) => res.json())
-      .then((data) => setCourses(data))
+      .then((data) => {
+        console.log("Courses loaded:", data.length);
+        setCourses(data);
+      })
       .catch((err) => console.error("Error loading courses", err));
   }, []);
 
@@ -40,13 +42,12 @@ export default function CoursesPage() {
     }
   };
 
-  const getCoverPhotoUrl = (photoPath) => {
-    if (!photoPath) return "/default-profile.png";
-    if (photoPath.startsWith("http")) return photoPath;
-    if (photoPath.startsWith("/courses/")) return photoPath;
-    return `/courses/${photoPath}`;
+  const getImageSrc = (coverPhoto) => {
+    if (!coverPhoto) return "/default-profile.png";
+    if (coverPhoto.startsWith("http")) return coverPhoto;
+    if (coverPhoto.startsWith("/courses/")) return coverPhoto;
+    return `/courses/${coverPhoto}`;
   };
-  
 
   return (
     <>
@@ -60,29 +61,31 @@ export default function CoursesPage() {
           <p className="text-center text-gray-500">No courses available.</p>
         ) : (
           <div className="space-y-16">
-            {currentCourses.map((course) => (
+            {currentCourses.map((course, index) => (
               <div
                 key={course.courseId}
                 className="relative w-full h-[300px] rounded-lg overflow-hidden shadow-lg"
               >
                 {/* Background Image */}
-                <Image
-                  src={getCoverPhotoUrl(course.coverPhoto)}
+                <img
+                  src={getImageSrc(course.coverPhoto)}
                   alt={course.courseName || "Course Cover"}
-                  fill
-                  unoptimized
-                  className="object-cover"
+                  className="w-full h-full object-cover"
                   onError={(e) => {
+                    console.log("Image failed:", e.target.src);
                     e.target.src = "/default-profile.png";
+                  }}
+                  onLoad={() => {
+                    console.log("Image loaded:", course.courseName, course.coverPhoto);
                   }}
                 />
 
                 {/* Overlay with content */}
-                <div className="absolute inset-0 bg-gray-500 flex flex-col justify-center items-center text-white text-center px-6 bg-opacity-50">
-                  <h2 className="text-3xl font-bold mb-2 drop-shadow-lg">
+                <div className="absolute inset-0 flex flex-col justify-center items-center text-black text-center px-6">
+                  <h2 className="text-3xl font-bold mb-2 drop-shadow-lg bg-white bg-opacity-80 px-4 py-2 rounded">
                     {course.courseName}
                   </h2>
-                  <p className="text-sm max-w-2xl mb-4 line-clamp-3 drop-shadow">
+                  <p className="text-sm max-w-2xl mb-4 line-clamp-3 drop-shadow bg-white bg-opacity-80 px-4 py-2 rounded">
                     {course.courseDescription}
                   </p>
                   <Link

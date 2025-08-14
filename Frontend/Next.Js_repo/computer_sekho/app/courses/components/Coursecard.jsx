@@ -1,29 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 
 export default function CourseCard({ course }) {
   if (!course) return null;
 
-  const getCoverPhotoUrl = (photoPath) => {
-    if (!photoPath) return "/default-profile.png";
-    if (photoPath.startsWith("http")) return photoPath;
-    if (photoPath.startsWith("/courses/")) return photoPath;
-    return `/courses/${photoPath}`;
-     
-  };
 
-  const imageSrc = getCoverPhotoUrl(course.coverPhoto);
 
   return (
     <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden h-full flex flex-col">
-      <div className="relative w-full h-48">
-        <Image
-          src={imageSrc}
+      <div className="w-full h-48">
+        <img
+          src={
+            course.coverPhoto
+              ? course.coverPhoto.startsWith("/courses/")
+                ? course.coverPhoto
+                : `/courses/${course.coverPhoto}`
+              : "/default-profile.png"
+          }
           alt={course.courseName || "Course Cover"}
-          fill
-          className="object-cover"
+          className="w-full h-full object-cover"
           onError={(e) => {
             e.target.src = "/default-profile.png";
           }}

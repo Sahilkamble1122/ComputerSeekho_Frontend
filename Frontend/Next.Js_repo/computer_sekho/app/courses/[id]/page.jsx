@@ -66,7 +66,6 @@
 "use client";
 import Footer from "@/app/footer/components/Footer";
 import Navcomponent from "@/app/home/components/Navcomponent";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -75,12 +74,7 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState(null);
   const API = `http://localhost:8080/api/courses/${id}`;
 
-  const getCoverPhotoUrl = (photoPath) => {
-    if (!photoPath) return "/default-profile.png";
-    if (photoPath.startsWith("http")) return photoPath;
-    if (photoPath.startsWith("/courses/")) return photoPath;
-    return `/courses/${photoPath}`;
-  };
+
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -107,12 +101,17 @@ export default function CourseDetailPage() {
     <>
       <Navcomponent />
       <div className="max-w-6xl mx-auto p-6 space-y-8 pt-[150px]">
-        <div className="relative w-full h-[400px] rounded shadow-lg overflow-hidden">
-          <Image
-            src={getCoverPhotoUrl(course.coverPhoto)}
+        <div className="w-full h-[400px] rounded shadow-lg overflow-hidden">
+          <img
+            src={
+              course.coverPhoto
+                ? course.coverPhoto.startsWith("/courses/")
+                  ? course.coverPhoto
+                  : `/courses/${course.coverPhoto}`
+                : "/default-profile.png"
+            }
             alt={course.courseName || "Course Cover"}
-            fill
-            className="object-cover"
+            className="w-full h-full object-cover"
             onError={(e) => {
               e.target.src = "/default-profile.png";
             }}
