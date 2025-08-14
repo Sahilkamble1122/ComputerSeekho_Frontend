@@ -21,7 +21,8 @@ export default function PlacementDetailPage() {
       try {
         const res = await fetch(`/api/placements/${slug}`);
         const data = await res.json();
-        setStudents(data.students); // Must be an array
+        // Only name and photo are provided by API; ensure array safety
+        setStudents(Array.isArray(data.students) ? data.students : []);
       } catch (err) {
         console.error("Failed to fetch students:", err);
       }
@@ -44,7 +45,6 @@ export default function PlacementDetailPage() {
             <StudentCard
               key={idx}
               name={s.name}
-              company={s.company}
               photo={s.photo}
             />
           ))}
