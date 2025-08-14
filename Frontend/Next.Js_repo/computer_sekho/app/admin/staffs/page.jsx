@@ -90,7 +90,7 @@ const ManageStaffPage = () => {
                   <td className="px-4 py-2">{staff.staffEmail}</td>
                   <td className="px-4 py-2 flex gap-2">
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/admin/staff/${staff.staffId}`}><Pencil size={16} /></Link>
+                      <Link href={`/admin/staffs/${staff.staffId}`}><Pencil size={16} /></Link>
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => handleDelete(staff.staffId)}>
                       <Trash size={16} />
