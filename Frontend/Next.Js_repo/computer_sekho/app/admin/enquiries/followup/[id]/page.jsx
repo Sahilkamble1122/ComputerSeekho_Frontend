@@ -112,19 +112,19 @@ const newValue = enquiry.enquiryCounter + 1;
           <h2 className="text-xl font-bold mb-2">Add Follow-up</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="followup_date">Follow-up Date</Label>
+              <Label htmlFor="followupDate">Follow-up Date</Label>
               <Input
                 type="date"
-                name="followup_date"
+                name="followupDate"
                 value={formData.followupDate}
                 onChange={handleChange}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="followup_msg">Comment</Label>
+              <Label htmlFor="followupMsg">Comment</Label>
               <Textarea
-                name="followup_msg"
+                name="followupMsg"
                 placeholder="Write comment here"
                 value={formData.followupMsg}
                 onChange={handleChange}

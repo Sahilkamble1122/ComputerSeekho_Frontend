@@ -89,35 +89,69 @@
 // }
 // app/api/placements/[slug]/route.js
 
+import { API_CONFIG, getApiUrl } from "@/lib/config";
+
 export async function GET(req, { params }) {
   const { slug } = params;
 
-  const data = {
-    "pg-dbda-aug-2024": [
-      { name: "Rohit Sharma", company: "TCS", photo: "/students/rohit.jpg" },
-      {
-        name: "Anjali Verma",
-        company: "Infosys",
-        photo: "/students/anjali.jpg",
-      },
-      {
-        name: "Aditya Patil",
-        company: "Capgemini",
-        photo: "/students/aditya.jpg",
-      },
-      { name: "Neha Singh", company: "Wipro", photo: "/students/neha.jpg" },
-    ],
-    "pg-dbda-jan-2024": [
-      { name: "Nikhil Patil", company: "TCS", photo: "/students/nikhil.jpg" },
-      { name: "Sneha Mishra", company: "Wipro", photo: "/students/sneha.jpg" },
-      { name: "Ramesh Rao", company: "Infosys", photo: "/students/ramesh.jpg" },
-    ],
-    // 👉 aur bhi batches add kar sakta hai future mai
-  };
+  try {
+    // Resolve slug -> batchId using batches API
+    const batchesResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.BATCHES));
+    if (!batchesResponse.ok) {
+      throw new Error(`Failed to fetch batches: ${batchesResponse.status}`);
+    }
+    const batches = await batchesResponse.json();
 
-  const students = data[slug] || []; // agar nahi mila to khali array
+    const courseMapping = {
+      101: "PG DBDA",
+      98: "PG DAC",
+      103: "PRE - CAT",
+    };
 
-  return Response.json({ students });
+    const slugify = (text) => text?.toLowerCase().replace(/\s+/g, "-") ?? "";
+
+    const matchedBatch = batches.find((batch) => {
+      const courseName = courseMapping[batch.courseId] || `Course ${batch.courseId}`;
+      const computedSlug = `${slugify(courseName)}-${slugify(batch.batchName)}`;
+      return computedSlug === slug;
+    });
+
+    if (!matchedBatch) {
+      return Response.json({ students: [] }, { status: 200 });
+    }
+
+    const batchId = matchedBatch.batchId;
+
+    // Fetch all students and filter by batchId and isPlaced
+    const studentsResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS));
+    if (!studentsResponse.ok) {
+      throw new Error(`Failed to fetch students: ${studentsResponse.status}`);
+    }
+    const allStudents = await studentsResponse.json();
+
+    const students = (Array.isArray(allStudents) ? allStudents : [])
+      .filter((s) => s.batchId === batchId && s.isPlaced === true)
+      .map((s) => {
+        const raw = String(s.photoUrl || "");
+        if (raw.startsWith("http")) {
+          return { name: s.studentName, photo: raw };
+        }
+        // Normalize to Next.js public path
+        let normalized = raw.replace(/\\/g, "/"); // Windows -> URL slashes
+        normalized = normalized.replace(/^\/+/, ""); // leading slashes
+        normalized = normalized.replace(/^public\//i, ""); // drop leading public/
+        const photo = `/${normalized}`; // serve from Next public
+        return {
+          name: s.studentName,
+          photo,
+        };
+      });
+
+    return Response.json({ students });
+  } catch (error) {
+    console.error("Error in placement details GET:", error);
+    return Response.json({ students: [] }, { status: 200 });
+  }
 }
 
 //future database connect hone ke baad isko replace karna hai slug ka kuch to dekhna padega isme fetching ke time

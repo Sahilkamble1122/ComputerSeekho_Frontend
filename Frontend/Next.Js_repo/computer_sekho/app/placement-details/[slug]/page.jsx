@@ -21,7 +21,8 @@ export default function PlacementDetailPage() {
       try {
         const res = await fetch(`/api/placements/${slug}`);
         const data = await res.json();
-        setStudents(data.students); // Must be an array
+        // Only name and photo are provided by API; ensure array safety
+        setStudents(Array.isArray(data.students) ? data.students : []);
       } catch (err) {
         console.error("Failed to fetch students:", err);
       }
@@ -31,22 +32,17 @@ export default function PlacementDetailPage() {
   }, [slug]);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen pt-[120px]">
       <Navcomponent />
 
       <main className="flex-grow p-6">
-        <h1 className="text-2xl font-bold mb-6 text-center">
+        <h1 className="text-2xl font-bold mb-6 text-center  text-blue-900">
           Placement Details - {slug.replaceAll("-", " ").toUpperCase()}
         </h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {paginatedStudents.map((s, idx) => (
-            <StudentCard
-              key={idx}
-              name={s.name}
-              company={s.company}
-              photo={s.photo}
-            />
+            <StudentCard key={idx} name={s.name} photo={s.photo} />
           ))}
         </div>
 
