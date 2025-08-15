@@ -182,6 +182,38 @@ export default function CoursePage() {
     }
   };
 
+  // Function to scroll to form smoothly
+  const scrollToForm = () => {
+    setTimeout(() => {
+      // More specific selector to find the form container
+      let formElement = null;
+      
+      // Try to find the form based on the active tab
+      if (activeTab === "courses") {
+        formElement = document.querySelector('form[onSubmit]')?.closest('.bg-white.p-6.rounded.shadow');
+      } else if (activeTab === "batches") {
+        // For batch form, look for the specific batch form container
+        formElement = document.querySelector('form[onSubmit="handleBatchSubmit"]')?.closest('.bg-white.p-6.rounded.shadow');
+      }
+      
+      // Fallback: try to find any form container
+      if (!formElement) {
+        formElement = document.querySelector('.bg-white.p-6.rounded.shadow.space-y-6') || 
+                     document.querySelector('.bg-white.p-6.rounded.shadow.space-y-4:last-child');
+      }
+      
+      if (formElement) {
+        formElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      } else {
+        console.log('Form element not found for scrolling');
+      }
+    }, 150); // Increased delay to ensure form is rendered
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -527,6 +559,7 @@ export default function CoursePage() {
               onClick={() => {
                 resetCourseForm();
                 setFormVisible(true);
+                scrollToForm(); // Call the new function here
               }}
               className="bg-black text-white px-4 py-2 rounded hover:opacity-90"
             >
@@ -669,6 +702,7 @@ export default function CoursePage() {
               onClick={() => {
                 resetBatchForm();
                 setFormVisible(true);
+                scrollToForm(); // Add automatic scrolling for batches
               }}
               className="bg-black text-white px-4 py-2 rounded hover:opacity-90"
             >
