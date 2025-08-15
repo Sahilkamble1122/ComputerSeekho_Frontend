@@ -373,6 +373,30 @@ export default function EnquiryForm() {
         alert("✅ Student registered successfully!");
       }
 
+      // Immediately mark enquiry as processed after successful student registration
+      try {
+        console.log("🔄 Marking enquiry as processed...");
+        const processedResponse = await fetch(
+          `http://localhost:8080/api/enquiries/${enquiryId}/status?status=true`,
+          {
+            method: "PATCH",
+            headers: { 'Authorization': `Bearer ${token}` },
+          }
+        );
+        
+        if (processedResponse.ok) {
+          console.log("✅ Enquiry marked as processed successfully");
+        } else {
+          const errorText = await processedResponse.text();
+          console.error("❌ Failed to mark enquiry as processed:", errorText);
+        }
+      } catch (error) {
+        console.error("❌ Error marking enquiry as processed:", error);
+        // Don't block user if this fails
+      }
+
+
+
       // Process initial payment if provided
       if (form.initialPayment && parseFloat(form.initialPayment) > 0 && form.paymentTypeId) {
         try {
@@ -409,40 +433,29 @@ export default function EnquiryForm() {
         }
       }
 
-      // Update enquiry status
-      try {
-        // Mark enquiry as processed
-        await fetch(`http://localhost:8080/api/enquiries/${enquiryId}/closure`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            closureReasonId: null,
-            closureReason: "Success",
-          }),
-        });
-
-        // Update status to success
-        await fetch(`http://localhost:8080/api/enquiries/${enquiryId}/status?status=success`, {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        // Mark as processed
-        await fetch(`http://localhost:8080/api/enquiries/${enquiryId}/processed?enquiryProcessedFlag=true`, {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      } catch (error) {
-        console.error("Error updating enquiry status:", error);
-        // Don't block user if this fails
-      }
+             // Update enquiry closure (optional - only if this endpoint exists)
+       try {
+         console.log("🔄 Updating enquiry closure...");
+         const closureResponse = await fetch(`http://localhost:8080/api/enquiries/${enquiryId}/closure`, {
+           method: "PATCH",
+           headers: {
+             "Content-Type": "application/json",
+             Authorization: `Bearer ${token}`,
+           },
+           body: JSON.stringify({
+             closureReasonId: null,
+             closureReason: "Success",
+           }),
+         });
+         
+         if (closureResponse.ok) {
+           console.log("✅ Enquiry closure updated successfully");
+         } else {
+           console.log("⚠️ Enquiry closure update failed (this is optional)");
+         }
+       } catch (error) {
+         console.log("⚠️ Enquiry closure update failed (this is optional)");
+       }
 
       // Reset form and redirect
       setForm(initialFormState);

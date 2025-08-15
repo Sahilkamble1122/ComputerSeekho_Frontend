@@ -22,33 +22,82 @@ const StudentPaymentDashboard = () => {
       try {
         setLoading(true);
         
-        // Fetch student details
         const token = sessionStorage.getItem('token');
-        const studentResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS), {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const studentData = await studentResponse.json();
         
-        const toUiStudent = (s) => ({
-          id: s.id ?? s.studentId ?? s.student_id,
-          name: s.name ?? s.studentName,
-          email: s.email ?? s.studentEmail,
-          phone: s.phone ?? s.studentMobile,
-          course: s.course ?? s.courseName ?? (s.courseId ? `Course ${s.courseId}` : ''),
-          batch: s.batch ?? s.batchName ?? (s.batchId ? `Batch ${s.batchId}` : ''),
-          totalFees: s.totalFees ?? s.courseFee ?? 0,
-          pendingFees: s.pendingFees ?? (s.courseFee ?? 0),
-          courseId: s.courseId,
-          batchId: s.batchId,
-        });
+        // Fetch students, courses, and batches in parallel
+        const [studentsResponse, coursesResponse, batchesResponse] = await Promise.all([
+          fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS), {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`${getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS).replace('/api/students', '/api/courses')}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`${getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS).replace('/api/students', '/api/batches')}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        ]);
+
+        const [studentsData, coursesData, batchesData] = await Promise.all([
+          studentsResponse.json(),
+          coursesResponse.json(),
+          batchesResponse.json()
+        ]);
+        
+        // Process courses data
+        let coursesArr = [];
+        if (Array.isArray(coursesData)) {
+          coursesArr = coursesData;
+        } else if (coursesData.success && Array.isArray(coursesData.data)) {
+          coursesArr = coursesData.data;
+        }
+
+        // Process batches data
+        let batchesArr = [];
+        if (Array.isArray(batchesData)) {
+          batchesArr = batchesData;
+        } else if (batchesData.success && Array.isArray(batchesData.data)) {
+          batchesArr = batchesData.data;
+        }
+        
+        // Normalize students data and match with courses/batches
+        const toUiStudent = (s) => {
+          // Find course name by ID - handle both string and number IDs
+          const course = coursesArr.find(c => 
+            c.id === s.courseId || 
+            c.courseId === s.courseId || 
+            c.id === parseInt(s.courseId) || 
+            c.courseId === parseInt(s.courseId)
+          );
+          const courseName = course ? (course.name || course.courseName) : (s.course || s.courseName || `Course ${s.courseId}`);
+
+          // Find batch name by ID - handle both string and number IDs
+          const batch = batchesArr.find(b => 
+            b.id === s.batchId || 
+            b.batchId === s.batchId || 
+            b.id === parseInt(s.batchId) || 
+            b.batchId === parseInt(s.batchId)
+          );
+          const batchName = batch ? (batch.name || batch.batchName) : (s.batch || s.batchName || `Batch ${s.batchId}`);
+
+          return {
+            id: s.id ?? s.studentId ?? s.student_id,
+            name: s.name ?? s.studentName,
+            email: s.email ?? s.studentEmail,
+            phone: s.phone ?? s.studentMobile,
+            course: courseName,
+            batch: batchName,
+            totalFees: s.totalFees ?? s.courseFee ?? 0,
+            pendingFees: s.pendingFees ?? (s.courseFee ?? 0),
+            courseId: s.courseId,
+            batchId: s.batchId,
+          };
+        };
 
         let students = [];
-        if (Array.isArray(studentData)) {
-          students = studentData.map(toUiStudent);
-        } else if (studentData.success && studentData.data) {
-          students = studentData.data.map(toUiStudent);
+        if (Array.isArray(studentsData)) {
+          students = studentsData.map(toUiStudent);
+        } else if (studentsData.success && studentsData.data) {
+          students = studentsData.data.map(toUiStudent);
         }
         
         const foundStudent = students.find(s => String(s.id) === String(studentId));

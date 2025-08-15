@@ -11,6 +11,7 @@ export const API_CONFIG = {
     PROCESS_PAYMENT: '/api/payment-with-type',
     PLACEMENTS: '/api/placements',
     BATCHES: '/api/batches',
+    COURSES: '/api/courses',
   }
 };
 

@@ -25,6 +25,8 @@ const NewPaymentPage = () => {
     paymentDate: new Date().toISOString().split('T')[0]
   });
   const [paymentTypes, setPaymentTypes] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,24 +42,85 @@ const NewPaymentPage = () => {
         });
         const studentData = await studentResponse.json();
         
-        const toUiStudent = (s) => ({
-          id: s.id ?? s.studentId ?? s.student_id,
-          name: s.name ?? s.studentName,
-          email: s.email ?? s.studentEmail,
-          phone: s.phone ?? s.studentMobile,
-          course: s.course ?? s.courseName ?? (s.courseId ? `Course ${s.courseId}` : ''),
-          batch: s.batch ?? s.batchName ?? (s.batchId ? `Batch ${s.batchId}` : ''),
-          totalFees: s.totalFees ?? s.courseFee ?? 0,
-          pendingFees: s.pendingFees ?? (s.courseFee ?? 0),
-          courseId: s.courseId,
-          batchId: s.batchId,
-        });
+        // Fetch courses
+        let coursesList = [];
+        try {
+          const coursesResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.COURSES), {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          const coursesData = await coursesResponse.json();
+          
+          if (Array.isArray(coursesData)) {
+            coursesList = coursesData;
+          } else if (coursesData.success && coursesData.data) {
+            coursesList = coursesData.data;
+          }
+          
+          setCourses(coursesList);
+        } catch (error) {
+          console.warn('Error fetching courses:', error);
+          // Fallback course mapping if API fails
+          const fallbackCourses = [
+            { courseId: 101, courseName: "PG DBDA" },
+            { courseId: 98, courseName: "PG DAC" },
+            { courseId: 103, courseName: "PRE - CAT" }
+          ];
+          coursesList = fallbackCourses;
+          setCourses(fallbackCourses);
+        }
+        
+        // Fetch batches
+        let batchesList = [];
+        try {
+          const batchesResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.BATCHES), {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          const batchesData = await batchesResponse.json();
+          
+          if (Array.isArray(batchesData)) {
+            batchesList = batchesData;
+          } else if (batchesData.success && batchesData.data) {
+            batchesList = batchesData.data;
+          }
+          
+          setBatches(batchesList);
+        } catch (error) {
+          console.warn('Error fetching batches:', error);
+          setBatches([]);
+        }
+        
+        const toUiStudent = (s, coursesList, batchesList) => {
+          // Find course name by ID
+          const courseObj = coursesList.find(c => c.courseId === s.courseId || c.id === s.courseId);
+          const courseName = courseObj ? courseObj.courseName : (s.course ?? s.courseName ?? (s.courseId ? `Course ${s.courseId}` : ''));
+          
+          // Find batch name by ID
+          const batchObj = batchesList.find(b => b.batchId === s.batchId || b.id === s.batchId);
+          const batchName = batchObj ? batchObj.batchName : (s.batch ?? s.batchName ?? (s.batchId ? `Batch ${s.batchId}` : ''));
+          
+          return {
+            id: s.id ?? s.studentId ?? s.student_id,
+            name: s.name ?? s.studentName,
+            email: s.email ?? s.studentEmail,
+            phone: s.phone ?? s.studentMobile,
+            course: courseName,
+            batch: batchName,
+            totalFees: s.totalFees ?? s.courseFee ?? 0,
+            pendingFees: s.pendingFees ?? (s.courseFee ?? 0),
+            courseId: s.courseId,
+            batchId: s.batchId,
+          };
+        };
 
         let students = [];
         if (Array.isArray(studentData)) {
-          students = studentData.map(toUiStudent);
+          students = studentData.map(s => toUiStudent(s, coursesList, batchesList));
         } else if (studentData.success && studentData.data) {
-          students = studentData.data.map(toUiStudent);
+          students = studentData.data.map(s => toUiStudent(s, coursesList, batchesList));
         }
         
         const foundStudent = students.find(s => String(s.id) === String(studentId));
@@ -81,14 +144,6 @@ const NewPaymentPage = () => {
           types = typesData;
         } else if (typesData.success && typesData.data) {
           types = typesData.data;
-        }
-        
-        // Temporary debugging to see the actual data structure
-        console.log('Payment Types Raw Response:', typesData);
-        console.log('Payment Types Processed:', types);
-        if (types.length > 0) {
-          console.log('First Payment Type Object:', types[0]);
-          console.log('Available Keys:', Object.keys(types[0]));
         }
         
         setPaymentTypes(types);

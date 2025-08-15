@@ -55,6 +55,7 @@ const PaymentsPage = () => {
           coursesArr = coursesData.data;
         }
         setCourses(coursesArr);
+        console.log('Processed courses:', coursesArr);
 
         // Process batches data
         let batchesArr = [];
@@ -64,16 +65,39 @@ const PaymentsPage = () => {
           batchesArr = batchesData.data;
         }
         setBatches(batchesArr);
+        console.log('Processed batches:', batchesArr);
         
         // Normalize students data and match with courses/batches
         const toUiStudent = (s) => {
-          // Find course name by ID
-          const course = coursesArr.find(c => c.id === s.courseId || c.courseId === s.courseId);
-          const courseName = course ? course.name || course.courseName : (s.course || s.courseName || `Course ${s.courseId}`);
+          // Find course name by ID - handle both string and number IDs
+          const course = coursesArr.find(c => 
+            c.id === s.courseId || 
+            c.courseId === s.courseId || 
+            c.id === parseInt(s.courseId) || 
+            c.courseId === parseInt(s.courseId)
+          );
+          const courseName = course ? (course.name || course.courseName) : (s.course || s.courseName || `Course ${s.courseId}`);
 
-          // Find batch name by ID
-          const batch = batchesArr.find(b => b.id === s.batchId || b.batchId === s.batchId);
-          const batchName = batch ? batch.name || batch.batchName : (s.batch || s.batchName || `Batch ${s.batchId}`);
+          // Find batch name by ID - handle both string and number IDs
+          const batch = batchesArr.find(b => 
+            b.id === s.batchId || 
+            b.batchId === s.batchId || 
+            b.id === parseInt(s.batchId) || 
+            b.batchId === parseInt(s.batchId)
+          );
+          const batchName = batch ? (batch.name || batch.batchName) : (s.batch || s.batchName || `Batch ${s.batchId}`);
+
+          // Debug logging for first few students
+          if (s.studentId <= 3) {
+            console.log(`Student ${s.studentId}:`, {
+              studentCourseId: s.courseId,
+              studentBatchId: s.batchId,
+              foundCourse: course,
+              foundBatch: batch,
+              courseName,
+              batchName
+            });
+          }
 
           return {
             id: s.id ?? s.studentId ?? s.student_id,

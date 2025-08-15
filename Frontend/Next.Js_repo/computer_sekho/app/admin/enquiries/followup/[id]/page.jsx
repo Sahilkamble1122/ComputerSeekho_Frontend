@@ -15,11 +15,48 @@ export default function FollowUpEditPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({ followupDate: '', followupMsg: '' });
   const [enquiry, setEnquiry] = useState(null);
+  const [currentStaffId, setCurrentStaffId] = useState(null);
 
   useEffect(() => {
     if (!id) return;
     fetchEnquiryDetails();
+    getCurrentStaffId();
   }, [id]);
+
+  const getCurrentStaffId = async () => {
+    try {
+      const token = sessionStorage.getItem('token');
+      const adminName = sessionStorage.getItem('admin');
+      
+      if (!token || !adminName) {
+        console.warn('Token or admin name not found');
+        return;
+      }
+
+      const res = await fetch('http://localhost:8080/api/staff', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!res.ok) {
+        console.error('Failed to fetch staff list');
+        return;
+      }
+      
+      const staffList = await res.json();
+      const staff = staffList.find(s => s.staffName === adminName);
+      
+      if (staff) {
+        setCurrentStaffId(staff.staffId);
+        console.log('Found staff ID:', staff.staffId, 'for admin:', adminName);
+      } else {
+        console.warn('Staff not found for admin:', adminName);
+      }
+    } catch (error) {
+      console.error('Error fetching staff ID:', error);
+    }
+  };
 
   const fetchEnquiryDetails = async () => {
     try {
@@ -50,6 +87,12 @@ export default function FollowUpEditPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!currentStaffId) {
+      toast.error('Staff ID not found. Please refresh the page and try again.');
+      return;
+    }
+
     try {
       const token = sessionStorage.getItem('token');
       const res = await fetch(`http://localhost:8080/api/followups?enquiry_id=${id}`, {
@@ -58,7 +101,7 @@ export default function FollowUpEditPage() {
         body: JSON.stringify({
           ...formData,
           enquiryId: id,
-          staffId: 1, // Replace with actual staff ID (login context)
+          staffId: currentStaffId, // Use the actual staff ID
         }),
       });
 
