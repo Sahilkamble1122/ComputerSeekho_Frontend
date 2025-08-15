@@ -1,72 +1,6 @@
-// "use client";
-// import { useEffect, useState } from "react";
-// import { useParams } from "next/navigation";
-
-// export default function CourseDetailPage() {
-//   const { courseId } = useParams();
-//   const [course, setCourse] = useState(null);
-//   const API = `http://localhost:8080/api/courses/${courseId}`;
-
-//   useEffect(() => {
-//     const fetchCourse = async () => {
-//       try {
-//         const res = await fetch(API);
-//         const data = await res.json();
-//         setCourse(data);
-//       } catch (err) {
-//         console.error("Error fetching course detail:", err);
-//       }
-//     };
-//     fetchCourse();
-//   }, [courseId]);
-
-//   if (!course) {
-//     return (
-//       <div className="text-center py-20 text-gray-600 text-lg">
-//         Loading course details...
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="max-w-6xl mx-auto p-6 space-y-8">
-//       <img
-//         src={course.coverPhoto}
-//         alt={course.courseName || "Course Cover"}
-//         className="w-full h-[400px] object-cover rounded shadow-lg"
-//       />
-
-//       <h1 className="text-4xl font-bold text-red-700 text-center">
-//         {course.courseName}
-//       </h1>
-
-//       <div className="bg-white p-6 rounded shadow space-y-4 text-gray-700">
-//         <p>
-//           <span className="font-semibold">Description:</span> {course.courseDescription}
-//         </p>
-//         <p>
-//           <span className="font-semibold">Syllabus:</span> {course.courseSyllabus}
-//         </p>
-//         <p>
-//           <span className="font-semibold">Duration:</span> {course.courseDuration} days
-//         </p>
-//         <p>
-//           <span className="font-semibold">Age Group:</span> {course.ageGrpType}
-//         </p>
-//         <p>
-//           <span className="font-semibold">Video File Path:</span> {course.videoId}
-//         </p>
-//         <p>
-//           <span className="font-semibold">Active Status:</span> {course.courseIsActive ? "Active" : "Inactive"}
-//         </p>
-//       </div>
-//     </div>
-//   );
-// }
 "use client";
 import Footer from "@/app/footer/components/Footer";
 import Navcomponent from "@/app/home/components/Navcomponent";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -74,13 +8,6 @@ export default function CourseDetailPage() {
   const { id } = useParams();
   const [course, setCourse] = useState(null);
   const API = `http://localhost:8080/api/courses/${id}`;
-
-  const getCoverPhotoUrl = (photoPath) => {
-    if (!photoPath) return "/default-profile.png";
-    if (photoPath.startsWith("http")) return photoPath;
-    if (photoPath.startsWith("/courses/")) return photoPath;
-    return `/courses/${photoPath}`;
-  };
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -107,12 +34,17 @@ export default function CourseDetailPage() {
     <>
       <Navcomponent />
       <div className="max-w-6xl mx-auto p-6 space-y-8 pt-[150px]">
-        <div className="relative w-full h-[400px] rounded shadow-lg overflow-hidden">
-          <Image
-            src={getCoverPhotoUrl(course.coverPhoto)}
+        <div className="w-full h-[400px] rounded shadow-lg overflow-hidden">
+          <img
+            src={
+              course.coverPhoto
+                ? course.coverPhoto.startsWith("/courses/")
+                  ? course.coverPhoto
+                  : `/courses/${course.coverPhoto}`
+                : "/default-profile.png"
+            }
             alt={course.courseName || "Course Cover"}
-            fill
-            className="object-cover"
+            className="w-full h-full object-cover"
             onError={(e) => {
               e.target.src = "/default-profile.png";
             }}
@@ -140,10 +72,10 @@ export default function CourseDetailPage() {
             <span className="font-semibold">Age Group:</span>{" "}
             {course.ageGrpType}
           </p>
-          <p>
+          {/* <p>
             <span className="font-semibold">Video File Path:</span>{" "}
             {course.videoId}
-          </p>
+          </p> */}
           <p>
             <span className="font-semibold">Active Status:</span>{" "}
             {course.courseIsActive ? "Active" : "Inactive"}

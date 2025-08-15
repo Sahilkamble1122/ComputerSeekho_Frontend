@@ -1,27 +1,50 @@
 import { API_CONFIG, getApiUrl } from "@/lib/config";
 
-// Helper function to get student counts for batches
+// Helper function to get real student counts for batches
 async function getStudentCounts(batchIds) {
   try {
-    // TODO: Replace this with your actual student count API
-    // For now, returning mock data
-    const mockStudentData = {};
+    const studentCounts = {};
     
-    batchIds.forEach(batchId => {
-      // Generate random student counts for demonstration
-      const totalStudents = Math.floor(Math.random() * 50) + 20; // 20-70 students
-      const placedStudents = Math.floor(Math.random() * totalStudents * 0.8) + Math.floor(totalStudents * 0.6); // 60-80% placement
+    // Fetch all students at once (more efficient)
+    const studentsResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.STUDENTS));
+    
+    if (studentsResponse.ok) {
+      const allStudents = await studentsResponse.json();
       
-      mockStudentData[batchId] = {
-        totalStudents,
-        placedStudents
-      };
-    });
+      // Calculate counts for each batch
+      batchIds.forEach(batchId => {
+        const batchStudents = allStudents.filter(student => student.batchId === batchId);
+        const totalStudents = batchStudents.length;
+        const placedStudents = batchStudents.filter(student => student.isPlaced === true).length;
+        
+        studentCounts[batchId] = {
+          totalStudents,
+          placedStudents
+        };
+      });
+    } else {
+      // Fallback if API fails
+      batchIds.forEach(batchId => {
+        studentCounts[batchId] = {
+          totalStudents: 0,
+          placedStudents: 0
+        };
+      });
+    }
     
-    return mockStudentData;
+    return studentCounts;
   } catch (error) {
     console.error("Error fetching student counts:", error);
-    return {};
+    
+    // Fallback if error occurs
+    const studentCounts = {};
+    batchIds.forEach(batchId => {
+      studentCounts[batchId] = {
+        totalStudents: 0,
+        placedStudents: 0
+      };
+    });
+    return studentCounts;
   }
 }
 
@@ -43,7 +66,7 @@ export async function GET() {
       103: "PRE - CAT" // Special course
     };
     
-    // Get student counts for all batches
+    // Get real student counts for all batches
     const batchIds = batches.map(batch => batch.batchId);
     const studentCounts = await getStudentCounts(batchIds);
     
@@ -74,7 +97,7 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching placement data:", error);
     
-    // Fallback to mock data if backend is not available
+    // Fallback to static data if backend is not available
     return Response.json([
       {
         course: "PG DBDA",
