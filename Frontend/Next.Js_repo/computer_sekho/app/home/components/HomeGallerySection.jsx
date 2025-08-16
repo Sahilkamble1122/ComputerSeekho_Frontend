@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function HomeGallerySection() {
@@ -19,30 +18,23 @@ export default function HomeGallerySection() {
   }, []);
 
   const getImageUrl = (album) => {
-    console.log("Album data for image URL:", album); // Debug log
-    
     // Check if album has a cover image from the images table
     if (album.coverImage) {
-      console.log("Using coverImage:", album.coverImage);
       return album.coverImage;
     }
     
     // Fallback to coverPhoto if it exists (legacy support)
     if (album.coverPhoto?.startsWith("http")) {
-      console.log("Using coverPhoto (http):", album.coverPhoto);
       return album.coverPhoto;
     }
     if (album.coverPhoto?.startsWith("/images/")) {
-      console.log("Using coverPhoto (/images/):", album.coverPhoto);
       return album.coverPhoto;
     }
     if (album.coverPhoto) {
-      console.log("Using coverPhoto (relative):", `/images/${album.coverPhoto}`);
       return `/images/${album.coverPhoto}`;
     }
     
     // Default fallback
-    console.log("Using default image");
     return "/default-profile.png";
   };
 
@@ -56,33 +48,44 @@ export default function HomeGallerySection() {
         <p className="text-center text-gray-500">Loading...</p>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {albums.map((album) => (
               <div
                 key={album.albumId}
-                onClick={() => router.push(`/gallery/${album.albumId}`)}
-                className="cursor-pointer rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
+                className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col hover:shadow-xl transition-shadow duration-300"
               >
-                <div className="relative w-full h-56">
-                  <Image
+                {/* Cover Image */}
+                <div className="h-48 w-full overflow-hidden">
+                  <img
                     src={getImageUrl(album)}
                     alt={album.albumName}
-                    fill
-                    className="object-cover"
-                    unoptimized
+                    className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="p-4 bg-white">
-                  <h3 className="text-lg font-semibold">{album.albumName}</h3>
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {album.albumDescription}
+
+                {/* Album Content */}
+                <div className="flex flex-col flex-1 p-5">
+                  <h3 className="text-xl font-semibold text-blue-900 mb-2">
+                    {album.albumName}
+                  </h3>
+                  <p className="text-gray-600 text-sm flex-1 line-clamp-3">
+                    {album.albumDescription || "No description available."}
                   </p>
+                  <div className="mt-4">
+                    <button
+                      onClick={() => router.push(`/gallery/${album.albumId}`)}
+                      className="inline-block bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition cursor-pointer"
+                    >
+                      View Album
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="text-center mt-8">
+          {/* See All Button */}
+          <div className="text-center mt-10">
             <Link
               href="/gallery"
               className="inline-block bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 transition"
