@@ -4,9 +4,9 @@ import { motion } from "framer-motion";
 
 const HeroSection = () => {
   return (
-    <section className="relative w-full h-screen overflow">
+    <section className="relative w-full h-screen overflow mt-16">
       <div
-        className="absolute inset-0 bg-cover bg-center filter scale-105"
+        className="absolute inset-0 bg-cover bg-center filter scale-105 "
         style={{
           backgroundImage: "url('/education.jpg')",
         }}
