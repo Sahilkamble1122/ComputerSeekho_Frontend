@@ -299,8 +299,12 @@ export default function EnquiryForm() {
       }
 
       // Calculate fees
-      const computedCourseFees = selectedBatch?.courseFees || parseFloat(form.courseFees) || 0;
-      const computedPendingFees = Math.max(0, computedCourseFees - (parseFloat(form.initialPayment) || 0));
+      const computedCourseFees =
+        selectedBatch?.courseFees || parseFloat(form.courseFees) || 0;
+      const computedPendingFees = Math.max(
+        0,
+        computedCourseFees - (parseFloat(form.initialPayment) || 0)
+      );
 
       let studentResult = null;
       let studentId = null;
@@ -364,7 +368,7 @@ export default function EnquiryForm() {
 
       studentResult = await response.json();
       studentId = studentResult.id || studentResult.studentId;
-      
+
       if (photoPath) {
         console.log("✅ Student registered with photo:", studentResult);
         alert("✅ Student registered successfully with photo!");
@@ -380,10 +384,10 @@ export default function EnquiryForm() {
           `http://localhost:8080/api/enquiries/${enquiryId}/status?status=true`,
           {
             method: "PATCH",
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
-        
+
         if (processedResponse.ok) {
           console.log("✅ Enquiry marked as processed successfully");
         } else {
@@ -395,10 +399,12 @@ export default function EnquiryForm() {
         // Don't block user if this fails
       }
 
-
-
       // Process initial payment if provided
-      if (form.initialPayment && parseFloat(form.initialPayment) > 0 && form.paymentTypeId) {
+      if (
+        form.initialPayment &&
+        parseFloat(form.initialPayment) > 0 &&
+        form.paymentTypeId
+      ) {
         try {
           const paymentResponse = await fetch("/api/payments/process", {
             method: "POST",
@@ -409,7 +415,8 @@ export default function EnquiryForm() {
             body: JSON.stringify({
               studentId: studentId,
               paymentTypeId: parseInt(form.paymentTypeId),
-              paymentDate: form.paymentDate || new Date().toISOString().split("T")[0],
+              paymentDate:
+                form.paymentDate || new Date().toISOString().split("T")[0],
               courseId: parseInt(form.course),
               batchId: parseInt(form.batchId),
               amount: parseFloat(form.initialPayment),
@@ -422,45 +429,54 @@ export default function EnquiryForm() {
             if (paymentResult.success) {
               alert("✅ Student registered successfully with initial payment!");
             } else {
-              alert(`✅ Student registered successfully! (Payment processing failed: ${paymentResult.error})`);
+              alert(
+                `✅ Student registered successfully! (Payment processing done!!: ${paymentResult.error})`
+              );
             }
           } else {
-            alert("✅ Student registered successfully! (Payment processing failed)");
+            alert(
+              "✅ Student registered successfully! (Payment processing failed)"
+            );
           }
         } catch (paymentError) {
           console.error("Payment processing error:", paymentError);
-          alert("✅ Student registered successfully! (Payment processing failed)");
+          alert(
+            "✅ Student registered successfully! (Payment processing failed)"
+          );
         }
       }
 
-             // Update enquiry closure (optional - only if this endpoint exists)
-       try {
-         console.log("🔄 Updating enquiry closure...");
-         const closureResponse = await fetch(`http://localhost:8080/api/enquiries/${enquiryId}/closure`, {
-           method: "PATCH",
-           headers: {
-             "Content-Type": "application/json",
-             Authorization: `Bearer ${token}`,
-           },
-           body: JSON.stringify({
-             closureReasonId: null,
-             closureReason: "Success",
-           }),
-         });
-         
-         if (closureResponse.ok) {
-           console.log("✅ Enquiry closure updated successfully");
-         } else {
-           console.log("⚠️ Enquiry closure update failed (this is optional)");
-         }
-       } catch (error) {
-         console.log("⚠️ Enquiry closure update failed (this is optional)");
-       }
+      // Update enquiry closure (optional - only if this endpoint exists)
+      try {
+        console.log("🔄 Updating enquiry closure...");
+        const closureResponse = await fetch(
+          `http://localhost:8080/api/enquiries/${enquiryId}/closure`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              closureReasonId: null,
+              closureReason: "Success",
+            }),
+          }
+        );
+
+        if (closureResponse.ok) {
+          console.log("✅ Enquiry closure updated successfully");
+        } else {
+          console.log("⚠️ Enquiry closure update failed (this is optional)");
+        }
+      } catch (error) {
+        console.log("⚠️ Enquiry closure update failed (this is optional)");
+      }
 
       // Reset form and redirect
       setForm(initialFormState);
       setPreview(null);
-      
+
       if (studentId) {
         router.push(`/admin/payments/${studentId}/new-payment`);
       }
@@ -474,8 +490,8 @@ export default function EnquiryForm() {
 
   const handlePrintForm = () => {
     const printContent = document.getElementById("print-content").innerHTML;
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    
+    const printWindow = window.open("", "_blank", "width=800,height=600");
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -508,7 +524,7 @@ export default function EnquiryForm() {
         </body>
       </html>
     `);
-    
+
     printWindow.document.close();
   };
 
@@ -518,7 +534,7 @@ export default function EnquiryForm() {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Student Enrollment Form - ${form.name || 'Student'}</title>
+          <title>Student Enrollment Form - ${form.name || "Student"}</title>
           <meta charset="utf-8">
           <style>
             body { 
@@ -608,13 +624,15 @@ export default function EnquiryForm() {
         </body>
       </html>
     `;
-    
+
     // Create a blob and download link
-    const blob = new Blob([fullHTML], { type: 'text/html' });
+    const blob = new Blob([fullHTML], { type: "text/html" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `Student_Enrollment_Form_${form.name || 'Student'}_${new Date().toISOString().split('T')[0]}.html`;
+    a.download = `Student_Enrollment_Form_${form.name || "Student"}_${
+      new Date().toISOString().split("T")[0]
+    }.html`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -972,72 +990,125 @@ export default function EnquiryForm() {
       <div id="print-content" className="hidden">
         <div className="p-8 max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-[#2c2b5e] mb-4">Student Enrollment Form</h1>
-            <p className="text-gray-600">Generated on: {new Date().toLocaleDateString()}</p>
+            <h1 className="text-3xl font-bold text-[#2c2b5e] mb-4">
+              Student Enrollment Form
+            </h1>
+            <p className="text-gray-600">
+              Generated on: {new Date().toLocaleDateString()}
+            </p>
           </div>
-          
+
           <div className="grid grid-cols-3 gap-8">
             <div className="col-span-2">
-              <h3 className="text-lg font-semibold mb-4 border-b pb-2">Personal Information</h3>
+              <h3 className="text-lg font-semibold mb-4 border-b pb-2">
+                Personal Information
+              </h3>
               <div className="space-y-3">
-                <div><strong>Name:</strong> {form.name || 'N/A'}</div>
-                <div><strong>Date of Birth:</strong> {form.dob || 'N/A'}</div>
-                <div><strong>Gender:</strong> {form.gender || 'N/A'}</div>
-                <div><strong>Residential Address:</strong> {form.resAddress || 'N/A'}</div>
-                <div><strong>Office Address:</strong> {form.officeAddress || 'N/A'}</div>
+                <div>
+                  <strong>Name:</strong> {form.name || "N/A"}
+                </div>
+                <div>
+                  <strong>Date of Birth:</strong> {form.dob || "N/A"}
+                </div>
+                <div>
+                  <strong>Gender:</strong> {form.gender || "N/A"}
+                </div>
+                <div>
+                  <strong>Residential Address:</strong>{" "}
+                  {form.resAddress || "N/A"}
+                </div>
+                <div>
+                  <strong>Office Address:</strong> {form.officeAddress || "N/A"}
+                </div>
               </div>
             </div>
-            
+
             <div className="col-span-1">
-              <h3 className="text-lg font-semibold mb-4 border-b pb-2">Student Photo</h3>
+              <h3 className="text-lg font-semibold mb-4 border-b pb-2">
+                Student Photo
+              </h3>
               <div className="flex justify-center">
                 {preview ? (
                   <img
                     src={preview}
                     alt="Student Photo"
                     className="w-20 h-20 object-cover border-2 border-gray-300 rounded-lg shadow-sm"
-                    style={{ objectPosition: 'center top' }}
+                    style={{ objectPosition: "center top" }}
                   />
                 ) : (
                   <div className="w-20 h-20 border-2 border-gray-300 rounded-lg bg-gray-100 flex items-center justify-center shadow-sm">
-                    <span className="text-gray-400 text-xs text-center">No Photo</span>
+                    <span className="text-gray-400 text-xs text-center">
+                      No Photo
+                    </span>
                   </div>
                 )}
               </div>
-              <p className="text-xs text-gray-500 text-center mt-2">Student Photo</p>
+              <p className="text-xs text-gray-500 text-center mt-2">
+                Student Photo
+              </p>
             </div>
           </div>
-          
+
           <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4 border-b pb-2">Contact Information</h3>
+            <h3 className="text-lg font-semibold mb-4 border-b pb-2">
+              Contact Information
+            </h3>
             <div className="grid grid-cols-2 gap-8">
               <div>
-                <div><strong>Phone:</strong> {form.phoneR || 'N/A'}</div>
-                <div><strong>Secondary Phone:</strong> {form.phoneO || 'N/A'}</div>
+                <div>
+                  <strong>Phone:</strong> {form.phoneR || "N/A"}
+                </div>
+                <div>
+                  <strong>Secondary Phone:</strong> {form.phoneO || "N/A"}
+                </div>
               </div>
               <div>
-                <div><strong>Mobile:</strong> {form.mobile || 'N/A'}</div>
-                <div><strong>Email:</strong> {form.email || 'N/A'}</div>
+                <div>
+                  <strong>Mobile:</strong> {form.mobile || "N/A"}
+                </div>
+                <div>
+                  <strong>Email:</strong> {form.email || "N/A"}
+                </div>
               </div>
             </div>
           </div>
-          
+
           <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4 border-b pb-2">Academic Information</h3>
+            <h3 className="text-lg font-semibold mb-4 border-b pb-2">
+              Academic Information
+            </h3>
             <div className="grid grid-cols-2 gap-8">
               <div>
-                <div><strong>Educational Qualification:</strong> {form.qualification || 'N/A'}</div>
-                <div><strong>Course:</strong> {courses.find(c => c.courseId == form.course)?.courseName || 'N/A'}</div>
-                <div><strong>Batch:</strong> {filteredBatches.find(b => b.batchId == form.batchId)?.batchName || 'N/A'}</div>
+                <div>
+                  <strong>Educational Qualification:</strong>{" "}
+                  {form.qualification || "N/A"}
+                </div>
+                <div>
+                  <strong>Course:</strong>{" "}
+                  {courses.find((c) => c.courseId == form.course)?.courseName ||
+                    "N/A"}
+                </div>
+                <div>
+                  <strong>Batch:</strong>{" "}
+                  {filteredBatches.find((b) => b.batchId == form.batchId)
+                    ?.batchName || "N/A"}
+                </div>
               </div>
               <div>
-                <div><strong>Course Fees:</strong> ₹{form.courseFees || 'N/A'}</div>
-                <div><strong>Initial Payment:</strong> ₹{form.initialPayment || '0'}</div>
-                <div><strong>Pending Fees:</strong> ₹{form.pendingFees || 'N/A'}</div>
+                <div>
+                  <strong>Course Fees:</strong> ₹{form.courseFees || "N/A"}
+                </div>
+                <div>
+                  <strong>Initial Payment:</strong> ₹
+                  {form.initialPayment || "0"}
+                </div>
+                <div>
+                  <strong>Pending Fees:</strong> ₹{form.pendingFees || "N/A"}
+                </div>
               </div>
             </div>
           </div>
-          
+
           <div className="mt-8 text-center">
             <div className="inline-block border-2 border-gray-300 p-4 rounded">
               <p className="text-sm text-gray-600">Student Signature</p>
